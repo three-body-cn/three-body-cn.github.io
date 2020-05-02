@@ -6,6 +6,8 @@
         <script src="public/three/three.js" data-ke-src="public/three/three.js"></script>
         <script src="public/three/stats.min.js"></script>
         <script src="public/three/GLTFLoader.js"></script>
+        <script src="public/three/physi.js"></script>
+        <script src="public/three/physijs_worker.js"></script>
         <script src="public/three/TrackballControls.js"></script>
         <script src="public/libs/inflate.min.js"></script>
         <style type="text/css">
@@ -21,7 +23,7 @@
         <script src="threebody.js"></script>
     </head>
 
-    <body onload="main();">
+    <body onload="main();" onkeypress="onKeyPress(event)">
         <div id="canvas-frame"></div>
     </body>
 </html>

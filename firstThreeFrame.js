@@ -98,10 +98,10 @@ function initObject() {
 
     // cube and texture
     var geometry = new THREE.CubeGeometry(1, 1, 1);
-    var texture = THREE.ImageUtils.loadTexture("model/Fighter/Su-27_diffuse.png",null,function(t){});
-    var material = new THREE.MeshLambertMaterial({map:texture});
+    var cubeTex = THREE.ImageUtils.loadTexture("model/Fighter/Su-27_diffuse.png",null,function(t){});
+    var cubeMat = new THREE.MeshLambertMaterial({map:cubeTex});
     // var material = new THREE.MeshLambertMaterial({color: 0x00ff00});
-    mCube = new THREE.Mesh(geometry, material);
+    mCube = new THREE.Mesh(geometry, cubeMat);
     mCube.position.z = 4;
     mScene.add(mCube);
 

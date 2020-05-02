@@ -12,7 +12,7 @@ newmtl Material__2
 	Kd 0.5880 0.5880 0.5880
 	Ks 0.0000 0.0000 0.0000
 	Ke 0.0000 0.0000 0.0000
-	map_Kd ./model/Fighter/Su-27_diffuse.png
+	map_Kd ./model/Fighter/Su-27_diffuse.jpg
 
 newmtl _Su_27_Flankerplane
 	Ns 8.0000
