@@ -1,4 +1,4 @@
-function GLScene() {
+var GLScene = function() {
     var mScene = this;
     this.mRenderer = new THREE.WebGLRenderer({
         antialias : true
@@ -32,7 +32,7 @@ function GLScene() {
 }
 
 GLScene.prototype.createCamera = function() {
-    this.mCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100000);
+    this.mCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100000);
     this.mCamera.position.x = 100;
     this.mCamera.position.y = 2100;
     this.mCamera.position.z = -200;
@@ -43,7 +43,7 @@ GLScene.prototype.createCamera = function() {
     this.mPhysicsScene.add(this.mCamera);
 }
 
-GLScene.prototype.createLight = function() {
+GLScene.prototype.createLights = function() {
     this.mAmbientLight = new THREE.AmbientLight(0xffffff);
     this.mPhysicsScene.add(this.mAmbientLight);
 }

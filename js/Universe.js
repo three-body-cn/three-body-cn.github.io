@@ -1,6 +1,6 @@
 function Universe() {
 	this.mObjects=[];
-	this.mScene = GLScene();
+	this.mScene = new GLScene();
 	this.mUniverseTime = 0;
 	this.mRunning = true;
 	this.G = 66725.9;
