@@ -28,18 +28,18 @@ var GLScene = function() {
     this.createLights();
     this.createBackground();
     this.mPhysicsScene.simulate();
-    this.render(this.render, this.mRenderer, this.mCamera, this.mPhysicsScene);
+    this.render(this.render, this.mRenderer, this.mCamera, this.mPhysicsScene, this.mStats);
 }
 
 GLScene.prototype.createCamera = function() {
-    this.mCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100000);
+    this.mCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100000);
     this.mCamera.position.x = 100;
     this.mCamera.position.y = 2100;
     this.mCamera.position.z = -200;
     this.mCamera.up.x = 0;
     this.mCamera.up.y = 1;
     this.mCamera.up.z = 0;
-    this.mCamera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0));
+    this.mCamera.lookAt(this.mPhysicsScene.position);
     this.mPhysicsScene.add(this.mCamera);
 }
 
@@ -81,11 +81,11 @@ GLScene.prototype.createBackground = function() {
     this.mPhysicsScene.add(starField);
 }
 
-GLScene.prototype.render = function(fun, renderer, camera, scene) {
-    renderer.render(camera, scene);
-    this.mStats.update();
+GLScene.prototype.render = function(fun, renderer, camera, scene, stats) {
+    renderer.render(scene, camera);
+    stats.update();
     requestAnimationFrame(function() {
-        fun(fun, renderer, camera, scene)
+        fun(fun, renderer, camera, scene, stats)
     });
 }
 
