@@ -2,7 +2,7 @@
 	"asters":[
 		{
 			"type":0,
-			"raduis":30,
+			"radius":30,
 			"mass":100,
 			"pos":{
 				"x":0,
@@ -17,7 +17,7 @@
 		},
 		{
 			"type":0,
-			"raduis":60,
+			"radius":60,
 			"mass":200,
 			"pos":{
 				"x":400,
@@ -32,7 +32,7 @@
 		},
 		{
 			"type":0,
-			"raduis":60,
+			"radius":60,
 			"mass":200,
 			"pos":{
 				"x":200,
@@ -47,7 +47,7 @@
 		},
 		{
 			"type":1,
-			"raduis":6,
+			"radius":6,
 			"mass":1,
 			"pos":{
 				"x":0,

@@ -9,9 +9,9 @@ function Aster(scene, config) {
     );
     this.mMaterial.map.wrapS = THREE.RepeatWrapping;
 	this.mMaterial.map.repeat.set(1.0, 1.0);
-	this.mGeometry = new THREE.SphereGeometry(radius ,32, 32);
+	this.mGeometry = new THREE.SphereGeometry(config.radius ,32, 32);
     this.mMesh = new Physijs.SphereMesh(
-		this.geometry,
+		this.mGeometry,
 		this.mMaterial,
 		mass = config.mass
     );

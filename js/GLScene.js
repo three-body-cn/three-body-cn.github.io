@@ -90,7 +90,7 @@ GLScene.prototype.render = function(fun, renderer, camera, scene, stats) {
 }
 
 GLScene.prototype.addObject = function(object) {
-    this.mPhysicsScene.add(object.body)
+    this.mPhysicsScene.add(object.mMesh)
     mUniverse.addObject(object)
 }
 
@@ -103,7 +103,7 @@ GLScene.prototype.remove = function(element) {
 }
 
 GLScene.prototype.removeObject = function(object) {
-    this.mPhysicsScene.remove(object.body)
+    this.mPhysicsScene.remove(object.mMesh)
     mUniverse.removeObject(object)
 }
 

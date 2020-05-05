@@ -16,7 +16,7 @@ function loadXMLDoc(url, callback) {
                 }
             }
         };
-        xmlhttp.open("GET", url, true);
+        xmlhttp.open("get", url, false);
         xmlhttp.send(null);
 	} else {
 	    alert("Your browser does not support XMLHTTP.");

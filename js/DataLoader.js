@@ -7,7 +7,7 @@ DataLoader.prototype.loadSimData = function(name, callback) {
 	if (savedData != undefined) {
 		callback(eval('(' + savedData + ')'))
 	} else {
-		loadXMLDoc("/config/" + name, function(data) {
+		loadXMLDoc("./config/" + name, function(data) {
 			callback(eval('(' + data + ')'))
 		})
 	}
