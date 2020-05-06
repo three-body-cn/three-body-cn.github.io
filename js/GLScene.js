@@ -3,7 +3,7 @@ var GLScene = function() {
     this.mRenderer = new THREE.WebGLRenderer({
         antialias : true
     });
-    this.mRenderer.setSize(window.innerWidth, window.height);
+    this.mRenderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('canvas-frame').appendChild(this.mRenderer.domElement);
     this.mRenderer.setClearColor(0x000000, 1.0);
 
