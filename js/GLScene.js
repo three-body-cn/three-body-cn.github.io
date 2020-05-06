@@ -115,7 +115,7 @@ GLScene.prototype.onWindowResize = function() {
 }
 
 GLScene.prototype.onUpdate = function(debug) {
-    if (mUniverse.mRunning) {
+    if (!mUniverse.mRunning) {
         return ;
     }
     for (var i = 0; i < mUniverse.mObjects.length; i++) {

@@ -1,5 +1,5 @@
 Physijs.scripts.worker = './js/public/three/physijs_worker.js';
-Physijs.scripts.ammo = './ammo.js';
+Physijs.scripts.ammo = 'ammo.js';
 
 var mUniverse;
 var mOrbitControls;
