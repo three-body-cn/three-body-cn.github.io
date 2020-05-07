@@ -129,6 +129,5 @@ GLScene.prototype.onUpdate = function(debug) {
         console.log(this.mCamera.position);
     }
 
-
     this.mPhysicsScene.simulate(undefined, 1);
 }

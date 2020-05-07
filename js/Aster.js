@@ -16,8 +16,10 @@ function Aster(scene, config) {
 		mass = config.mass
     );
     this.mMesh.position.set(config.pos.x, config.pos.y, config.pos.z);
+    this.mMesh.radius = config.radius;
     this.mType = config.type;
     this.mMesh.name = name;
+    this.debugLogCnt = 10
 }
 
 Aster.prototype.gravityForce = function(asters, debug = false) {
@@ -34,13 +36,23 @@ Aster.prototype.gravityForce = function(asters, debug = false) {
                     .divideScalar(Math.pow(distance,2));
         force.add(oneForce);
         
-        if (debug) {
-            alert("oneForce:" + logVector3(oneForce));
-            alert("force:" + logVector3(force));
+        if (debug && this.debugLogCnt > 0) {
+            console.log("oneForce:" + this.logVector3(oneForce));
+            console.log("force:" + this.logVector3(force));
         }
     }
-    if (debug) {
-        alert("all force:" + logVector3(force));
+    if (debug && this.debugLogCnt > 0) {
+        console.log("all force:" + this.logVector3(force));
+        console.log("position:" + this.logVector3(this.mMesh.position));
     }
     this.mMesh.applyForce(force, new THREE.Vector3(0,0,0));
+    this.debugLogCnt--;
+}
+
+Aster.prototype.logVector3 = function(vector) {
+	return "vec[x] = " + vector.x + ", vec[y] = " + vector.y + ", vec[z] = " + vector.z;
+}
+
+Aster.prototype.update = function() {
+    this.gravityForce(mUniverse.mObjects)
 }
