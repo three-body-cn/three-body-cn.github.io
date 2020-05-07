@@ -1,13 +1,13 @@
 var mStats;
 var mRenderer;
 var mCamera;
-var mScene;
-var mTrackballControls
+var mSolarSystem;
+var mTrackballControls;
 var mAmbientLight;
-var mDirectionalLight;
-var mCube;
 var mSwitchBoard;
 var mMeshGrid;
+// stars
+var mEarth;
 
 function initThree() {
     width = document.getElementById('canvas-frame').clientWidth;
@@ -47,10 +47,10 @@ function initCamera() {
 }
 
 function initScene() {
-    mScene = new THREE.Scene();
+    mSolarSystem = new THREE.Scene();
 
     var axis = new THREE.AxisHelper(20);
-    mScene.add(axis);
+    mSolarSystem.add(axis);
 
     // 创建控件并绑定在相机上
     mTrackballControls = new THREE.TrackballControls(mCamera);
@@ -65,10 +65,10 @@ function initScene() {
 
 function initLight() {
     mAmbientLight = new THREE.AmbientLight(0x555555);
-    mScene.add(mAmbientLight);
+    mSolarSystem.add(mAmbientLight);
     mDirectionalLight = new THREE.DirectionalLight();
     mDirectionalLight.position.set(100, 100, 100);
-    mScene.add(mDirectionalLight);
+    mSolarSystem.add(mDirectionalLight);
 }
 
 function initObject() {
@@ -88,66 +88,21 @@ function initObject() {
     for (var i = 0; i <= 10; i ++) {
         var line = new THREE.Line(mMeshGrid, new THREE.LineBasicMaterial({color: 0x000000, opacity: 0.2}));
         line.position.z = (i * 1) - 5;
-        mScene.add(line);
+        mSolarSystem.add(line);
 
         var line = new THREE.Line(mMeshGrid, new THREE.LineBasicMaterial({color: 0x000000, opacity: 0.2}));
         line.position.x = (i * 1) - 5;
         line.rotation.y = 90 * Math.PI / 180;
-        mScene.add(line);
+        mSolarSystem.add(line);
     }
 
     // cube and texture
-    var geometry = new THREE.CubeGeometry(1, 1, 1);
-    var cubeTex = THREE.ImageUtils.loadTexture("model/Fighter/Su-27_diffuse.png",null,function(t){});
-    var cubeMat = new THREE.MeshLambertMaterial({map:cubeTex});
-    // var material = new THREE.MeshLambertMaterial({color: 0x00ff00});
-    mCube = new THREE.Mesh(geometry, cubeMat);
-    mCube.position.z = 4;
-    mScene.add(mCube);
-
-    // obj loader
-    var mtlLoader = new THREE.MTLLoader();
-    mtlLoader.setPath('model/Fighter/');
-    mtlLoader.load('Su-27.mtl', function(material) {
-        material.preload();
-        var objLoader = new THREE.OBJLoader();
-        objLoader.setMaterials(material);
-        objLoader.setPath('model/Fighter/');
-        objLoader.load('Su-27.obj', function(object) {
-            mSwitchBoard = object;
-            mSwitchBoard.rotation.y = 2.0;
-            mScene.add(mSwitchBoard);
-        }, onProgress, onError);
-    });
-
-    // gltf loader
-    var gltfLoader = new THREE.GLTFLoader();
-    gltfLoader.load('model/bull_thumb.glb', function(obj) {
-        console.log(obj);
-        obj.scene.position.z = 3;
-        mScene.add(obj.scene);
-    }, onProgress, onError);
-
-    // fbx loader
-    var fbxLoader = new THREE.FBXLoader();
-    fbxLoader.load('model/ZombieNurse/zombienurse_Rig.FBX', function(obj) {
-        object.mixer = new THREE.AnimationMixer(object);
-        mixers.push(object.mixer);
-
-        var action = object.mixer.clipAction(object.animations[0]);
-        action.play();
-
-        object.traverse(function(child) {
-            if (child.isMesh) {
-                child.castShadow = true;
-                child.receiveShadow = true;
-            }
-        } );
-
-        object.scale.set(15.0, 15.0, 15.0);
-        object.position.z = 3;
-        mScene.add(object);
-    });
+    var geometry = new THREE.SphereGeometry(1 ,32, 32);
+    var earthTex = THREE.ImageUtils.loadTexture("model/Earth/Earth_Mat_baseColor.png",null,function(t){});
+    var cubeMat = new THREE.MeshLambertMaterial({map:earthTex});
+    mEarth = new THREE.Mesh(geometry, cubeMat);
+    mEarth.position.z = 4;
+    mSolarSystem.add(mEarth);
 }
 
 function render() {
@@ -156,10 +111,10 @@ function render() {
     mTrackballControls.update(delta);
 
     mRenderer.clear();
-    mRenderer.render(mScene, mCamera);
+    mRenderer.render(mSolarSystem, mCamera);
 
-    mCube.rotation.x += 0.01;
-    mCube.rotation.y += 0.01;
+    mEarth.rotation.x += 0.01;
+    mEarth.rotation.y += 0.01;
     if (null != mSwitchBoard) {
         mSwitchBoard.rotation.y += 0.01;
     }
