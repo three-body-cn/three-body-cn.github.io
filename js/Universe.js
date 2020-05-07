@@ -22,15 +22,19 @@ Universe.prototype.start = function(callback, configData = undefined) {
 Universe.prototype.createAsters = function(asterDatas) {
 	for (var i = 0; i < asterDatas.length; i++) {
 		asterData = asterDatas[i];
+		var velocity = new THREE.Vector3(asterData['initVelocity']['x'], asterData['initVelocity']['y'], asterData['initVelocity']['z']);
 		if (asterData['type'] == AsterType.STAR) {
 			var star = createStar(this.mScene, asterData);
-			star.mMesh.setLinearVelocity(new THREE.Vector3(asterData['initVelocity']['x'], asterData['initVelocity']['y'], asterData['initVelocity']['z']));
+			star.mMesh.setLinearVelocity(velocity);
 		} else if (asterData['type'] == AsterType.PLANET) {
 			var earth = createEarth(this.mScene, asterData);
-			earth.mMesh.setLinearVelocity(new THREE.Vector3(asterData['initVelocity']['x'], asterData['initVelocity']['y'], asterData['initVelocity']['z']));
+			earth.mMesh.setLinearVelocity(velocity);
 		} else if (asterData['type'] == AsterType.SATELLITE) {
 			var satellite = createSatellite(this.mScene, asterData);
-			satellite.mMesh.setLinearVelocity(new THREE.Vector3(asterData['initVelocity']['x'], asterData['initVelocity']['y'], asterData['initVelocity']['z']));
+			satellite.mMesh.setLinearVelocity(velocity);
+		} else {
+			var earth = createEarth(this.mScene, asterData);
+			earth.mMesh.setLinearVelocity(velocity);
 		}
 	}
 }
