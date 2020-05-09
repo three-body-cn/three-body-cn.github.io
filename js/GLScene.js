@@ -33,7 +33,7 @@ var GLScene = function() {
 
 GLScene.prototype.createCamera = function() {
     this.mCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100000);
-    this.mCamera.position.x = 100;
+    this.mCamera.position.x = 1000;
     this.mCamera.position.y = 2100;
     this.mCamera.position.z = -200;
     this.mCamera.up.x = 0;
@@ -51,14 +51,14 @@ GLScene.prototype.createLights = function() {
 GLScene.prototype.createBackground = function() {
     // 创建一个圆形的材质，记得一定要加上texture.needsUpdate = true;
     let canvas = document.createElement("canvas");
-    canvas.width = 100;
-    canvas.height = 100;
+    canvas.width = 64;
+    canvas.height = 64;
 
     let context = canvas.getContext("2d");
     context.fillStyle = "#aaaaaa";
 
     // canvas创建圆 http://www.w3school.com.cn/tags/canvas_arc.asp
-    context.arc(50, 50, 45, 0, 2 * Math.PI);
+    context.arc(32, 32, 25, 0, 2 * Math.PI);
     context.fill();
 
     // 创建材质
