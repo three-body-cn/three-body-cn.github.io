@@ -2,8 +2,13 @@ function Aster(scene, config) {
     this.mScene = scene;
     this.mRadius = config.radius;
     this.mLoader = new THREE.TextureLoader();
-    this.mMaterial = Physijs.createMaterial(
-        new THREE.MeshLambertMaterial({map: this.mLoader.load(config.texPath)}),
+    this.mType = config.type;
+    if (this.mType == AsterType.STAR) {
+        this.mMeshMaterial = new THREE.MeshLambertMaterial({map: this.mLoader.load(config.texPath), emissive: 0x888833});
+    } else {
+        this.mMeshMaterial = new THREE.MeshLambertMaterial({map: this.mLoader.load(config.texPath)});
+    }
+    this.mMaterial = Physijs.createMaterial(this.mMeshMaterial,
         0.1, // low friction
         0.9  // high restitution
     );
@@ -17,7 +22,6 @@ function Aster(scene, config) {
     );
     this.mMesh.position.set(config.pos.x, config.pos.y, config.pos.z);
     this.mMesh.radius = config.radius;
-    this.mType = config.type;
     this.mMesh.name = name;
     this.debugLogCnt = 10
 }

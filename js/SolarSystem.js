@@ -45,6 +45,11 @@ function onKeyPress(event) {
             mSaturn.track.visible = mShowAssist;
             mUranus.track.visible = mShowAssist;
             mNeptune.track.visible = mShowAssist;
+            if (mShowAssist) {
+                document.getElementById('canvas-frame').appendChild(mStats.domElement);
+            } else {
+                document.getElementById('canvas-frame').removeChild(mStats.domElement);
+            }
             break;
         default:
             break;
@@ -156,12 +161,10 @@ function initBackground() {
 }
 
 function initThree() {
-    width = document.getElementById('canvas-frame').clientWidth;
-    height = document.getElementById('canvas-frame').clientHeight;
     mRenderer = new THREE.WebGLRenderer({
         antialias : true
     });
-    mRenderer.setSize(width, height);
+    mRenderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('canvas-frame').appendChild(mRenderer.domElement);
     mRenderer.setClearColor(0x000000, 1.0);
 
@@ -169,7 +172,6 @@ function initThree() {
     mStats.domElement.style.position = 'absolute';
     mStats.domElement.style.left = '5px';
     mStats.domElement.style.top = '5px';
-    document.getElementById('canvas-frame').appendChild(mStats.domElement);
 
     // onSurfaceChanged
     window.addEventListener('resize', onWindowResize, false);
@@ -182,7 +184,7 @@ function onWindowResize() {
 }
 
 function initCamera() {
-    mCamera = new THREE.PerspectiveCamera(45, width / height, 1, 100000);
+    mCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100000);
     mCamera.position.x = 70;
     mCamera.position.y = 70;
     mCamera.position.z = 70;
@@ -243,34 +245,34 @@ function initObjects() {
     // sun
     var sunGeo = new THREE.SphereGeometry(7 ,32, 32);
     var sunTex = THREE.ImageUtils.loadTexture("model/Solar/Sol_Opaque_Mat_baseColor.png",null,function(t){});
-    var sunMat = new THREE.MeshLambertMaterial({map:sunTex});
+    var sunMat = new THREE.MeshLambertMaterial({map: sunTex, emissive: 0x888833});
     mSun = new THREE.Mesh(sunGeo, sunMat);
     mSolarSystem.add(mSun);
     // revolution pivot
     var revolutionPivot = new THREE.Object3D();
     // mercury
-    mMercury = initPlanet(0.56, 13, 0.04, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Mercury/Mercury_Mat_baseColor.png", mSolarSystem);
+    mMercury = initPlanet(0.56, 13, 0.04, revolutionPivot, new THREE.Vector3(0.0, 0.001, 0), "model/Mercury/Mercury_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mMercury);
     // venus
-    mVenus = initPlanet(0.86, 16, 0.015, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Venus/Venus_Terrain_Mat_baseColor.png", mSolarSystem);
+    mVenus = initPlanet(0.86, 16, 0.015, revolutionPivot, new THREE.Vector3(0.0, 0.001, 0), "model/Venus/Venus_Terrain_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mVenus);
     // earth
-    mEarth = initPlanet(1, 20, 0.01, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Earth/Earth_Mat_baseColor.png", mSolarSystem);
+    mEarth = initPlanet(1, 20, 0.01, revolutionPivot, new THREE.Vector3(0.0, 0.1, 0), "model/Earth/Earth_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mEarth);
     // mars
-    mMars = initPlanet(0.5, 25, 0.005, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Mars/Mars_mat_baseColor.png", mSolarSystem);
+    mMars = initPlanet(0.5, 25, 0.005, revolutionPivot, new THREE.Vector3(0.0, 0.1, 0), "model/Mars/Mars_mat_baseColor.png", mSolarSystem);
     mPlanets.push(mMars);
     // jupiter
-    mJupiter = initPlanet(4, 35, 0.003, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Jupiter/Jupiter_Mat_baseColor.png", mSolarSystem);
+    mJupiter = initPlanet(4, 35, 0.003, revolutionPivot, new THREE.Vector3(0.0, 0.15, 0), "model/Jupiter/Jupiter_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mJupiter);
     // saturn
-    mSaturn = initPlanet(3, 50, 0.001, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Saturn/SaturnPlanet_Opaque_Mat_baseColor.png", mSolarSystem);
+    mSaturn = initPlanet(3, 50, 0.001, revolutionPivot, new THREE.Vector3(0.0, 0.14, 0), "model/Saturn/SaturnPlanet_Opaque_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mSaturn);
     // uranus
-    mUranus = initPlanet(2, 60, 0.0006, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Uranus/UranusGlobe_Mat_baseColor.png", mSolarSystem);
+    mUranus = initPlanet(2, 60, 0.0006, revolutionPivot, new THREE.Vector3(0.0, 0.11, 0), "model/Uranus/UranusGlobe_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mUranus);
     // neptune
-    mNeptune = initPlanet(1.8, 70, 0.0003, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Neptune/NeptuneGlobe_Mat_baseColor.png", mSolarSystem);
+    mNeptune = initPlanet(1.8, 70, 0.0003, revolutionPivot, new THREE.Vector3(0.0, 0.12, 0), "model/Neptune/NeptuneGlobe_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mNeptune);
 }
 

@@ -44,7 +44,7 @@ GLScene.prototype.createCamera = function() {
 }
 
 GLScene.prototype.createLights = function() {
-    this.mAmbientLight = new THREE.AmbientLight(0xffffff);
+    this.mAmbientLight = new THREE.AmbientLight(0x777777);
     this.mPhysicsScene.add(this.mAmbientLight);
 }
 
