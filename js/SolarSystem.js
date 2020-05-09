@@ -93,7 +93,7 @@ function randomNormalDistribution() {
  * @param revolutionRadius 行星的公转半径
  * @param speed 行星公转速度
  * @param pivot 公转参照物
- * @param rotation THREE.Vector3 行星组合体的x,y,z三个方向的自转角度
+ * @param rotation THREE.Vector3 行星组合体的x,y,z三个方向的自转角速度
  * @param imgUrl 行星的贴图
  * @param scene 场景
  * @returns {{satellite: THREE.Mesh, speed: *}} 行星组合对象;速度
@@ -115,10 +115,11 @@ function initPlanet(scale, revolutionRadius, speed, pivot, rotation, imgUrl, sce
     var solarPlanetSys = new THREE.Group();
     solarPlanetSys.add(pivot);
     solarPlanetSys.add(planet);
+    solarPlanetSys.rotation.y = Math.random();
 
     scene.add(solarPlanetSys);
     
-    return {group: solarPlanetSys, mesh: mesh, speed: speed, track: track};
+    return {group: solarPlanetSys, mesh: mesh, speed: speed, rotation: rotation, track: track};
 };
 
 function initBackground() {
@@ -148,7 +149,7 @@ function initBackground() {
 	    starsGeometry.vertices.push(star);
 	}
 
-	var starsMaterial = new THREE.PointsMaterial({color: 0xffffaa, size:20, map:texture});
+	var starsMaterial = new THREE.PointsMaterial({color: 0xffffaa, size:10, map:texture});
 	var starField = new THREE.Points(starsGeometry, starsMaterial);
 
 	mSolarSystem.add(starField);
@@ -165,7 +166,6 @@ function initThree() {
     mRenderer.setClearColor(0x000000, 1.0);
 
     mStats = new Stats();
-    mStats.domElement.style.visible = mShowAssist;
     mStats.domElement.style.position = 'absolute';
     mStats.domElement.style.left = '5px';
     mStats.domElement.style.top = '5px';
@@ -249,28 +249,28 @@ function initObjects() {
     // revolution pivot
     var revolutionPivot = new THREE.Object3D();
     // mercury
-    mMercury = initPlanet(0.56, 13, 0.04, revolutionPivot, new THREE.Vector3(0.1, 0.1, 0), "model/Mercury/Mercury_Mat_baseColor.png", mSolarSystem);
+    mMercury = initPlanet(0.56, 13, 0.04, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Mercury/Mercury_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mMercury);
     // venus
-    mVenus = initPlanet(0.86, 16, 0.015, revolutionPivot, new THREE.Vector3(0.1, 0.1, 0), "model/Venus/Venus_Terrain_Mat_baseColor.png", mSolarSystem);
+    mVenus = initPlanet(0.86, 16, 0.015, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Venus/Venus_Terrain_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mVenus);
     // earth
-    mEarth = initPlanet(1, 20, 0.01, revolutionPivot, new THREE.Vector3(0.1, 0.1, 0), "model/Earth/Earth_Mat_baseColor.png", mSolarSystem);
+    mEarth = initPlanet(1, 20, 0.01, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Earth/Earth_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mEarth);
     // mars
-    mMars = initPlanet(0.5, 25, 0.005, revolutionPivot, new THREE.Vector3(0.1, 0.1, 0), "model/Mars/Mars_mat_baseColor.png", mSolarSystem);
+    mMars = initPlanet(0.5, 25, 0.005, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Mars/Mars_mat_baseColor.png", mSolarSystem);
     mPlanets.push(mMars);
     // jupiter
-    mJupiter = initPlanet(4, 35, 0.003, revolutionPivot, new THREE.Vector3(0.1, 0.1, 0), "model/Jupiter/Jupiter_Mat_baseColor.png", mSolarSystem);
+    mJupiter = initPlanet(4, 35, 0.003, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Jupiter/Jupiter_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mJupiter);
     // saturn
-    mSaturn = initPlanet(3, 50, 0.001, revolutionPivot, new THREE.Vector3(0.1, 0.1, 0), "model/Saturn/SaturnPlanet_Opaque_Mat_baseColor.png", mSolarSystem);
+    mSaturn = initPlanet(3, 50, 0.001, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Saturn/SaturnPlanet_Opaque_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mSaturn);
     // uranus
-    mUranus = initPlanet(2, 60, 0.0006, revolutionPivot, new THREE.Vector3(0.1, 0.1, 0), "model/Uranus/UranusGlobe_Mat_baseColor.png", mSolarSystem);
+    mUranus = initPlanet(2, 60, 0.0006, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Uranus/UranusGlobe_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mUranus);
     // neptune
-    mNeptune = initPlanet(1.8, 70, 0.0003, revolutionPivot, new THREE.Vector3(0.1, 0.1, 0), "model/Neptune/NeptuneGlobe_Mat_baseColor.png", mSolarSystem);
+    mNeptune = initPlanet(1.8, 70, 0.0003, revolutionPivot, new THREE.Vector3(0.001, 0.01, 0), "model/Neptune/NeptuneGlobe_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mNeptune);
 }
 
@@ -295,6 +295,8 @@ function render() {
 function updateScene() {
     for (var i = 0; i < mPlanets.length; i++) {
         mPlanets[i].group.rotation.y -= mPlanets[i].speed;
+        mPlanets[i].mesh.rotation.x += mPlanets[i].rotation.x;
+        mPlanets[i].mesh.rotation.y -= mPlanets[i].rotation.y;
     }
 }
 
