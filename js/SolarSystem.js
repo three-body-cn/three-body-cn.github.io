@@ -17,7 +17,6 @@ var mPlanets = [];
 var mMercury;
 var mVenus;
 var mEarth;
-var mMoon;
 var mMars;
 var mJupiter;
 var mSaturn;
@@ -103,28 +102,32 @@ function randomNormalDistribution() {
  * @param scene 场景
  * @returns {{satellite: THREE.Mesh, speed: *}} 行星组合对象;速度
 */
-function initPlanet(scale, revolutionRadius, speed, pivot, rotation, imgUrl, scene) {
-    var planet = new THREE.Object3D();
+function createPlanet(scale, revolutionRadius, speed, pivot, rotation, imgUrl, scene, satellite = undefined) {
+    var planetAndSatellite = new THREE.Object3D();
+    var planetAndTrack = new THREE.Object3D();
     var track = new THREE.Mesh(new THREE.RingGeometry(revolutionRadius, revolutionRadius + 0.05, 48, 1), new THREE.MeshBasicMaterial());
     track.rotation.x = -90 * Math.PI / 180;
     track.visible = mShowAssist;
-    planet.add(track);
+    planetAndTrack.add(track);
     
     var mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), new THREE.MeshLambertMaterial({
         map: THREE.ImageUtils.loadTexture(imgUrl, null, function(t){})})); 
-    mesh.rotation.set(rotation.x, rotation.y, rotation.z);
-    mesh.position.z = revolutionRadius;
-    mesh.scale.x = mesh.scale.y = mesh.scale.z = scale;
-    planet.add(mesh);
+    planetAndSatellite.add(mesh);
+    if (undefined != satellite) 
+        planetAndSatellite.add(satellite);
+    planetAndSatellite.rotation.set(rotation.x, rotation.y, rotation.z);
+    planetAndSatellite.position.z = revolutionRadius;
+    planetAndSatellite.scale.x = planetAndSatellite.scale.y = planetAndSatellite.scale.z = scale;
+    planetAndTrack.add(planetAndSatellite);
 
     var solarPlanetSys = new THREE.Group();
     solarPlanetSys.add(pivot);
-    solarPlanetSys.add(planet);
+    solarPlanetSys.add(planetAndTrack);
     solarPlanetSys.rotation.y = Math.random();
 
     scene.add(solarPlanetSys);
     
-    return {group: solarPlanetSys, mesh: mesh, speed: speed, rotation: rotation, track: track};
+    return {group: solarPlanetSys, planet: planetAndSatellite, speed: speed, rotation: rotation, track: track};
 };
 
 function initBackground() {
@@ -251,28 +254,50 @@ function initObjects() {
     // revolution pivot
     var revolutionPivot = new THREE.Object3D();
     // mercury
-    mMercury = initPlanet(0.56, 13, 0.04, revolutionPivot, new THREE.Vector3(0.0, 0.001, 0), "model/Mercury/Mercury_Mat_baseColor.png", mSolarSystem);
+    mMercury = createPlanet(0.56, 13, 0.04, revolutionPivot, new THREE.Vector3(0.0, 0.001, 0), "model/Mercury/Mercury_Mat_baseColor.png", mSolarSystem);
     mPlanets.push(mMercury);
     // venus
-    mVenus = initPlanet(0.86, 16, 0.015, revolutionPivot, new THREE.Vector3(0.0, 0.001, 0), "model/Venus/Venus_Terrain_Mat_baseColor.png", mSolarSystem);
+    mVenus = createPlanet(0.86, 16, 0.015, revolutionPivot, new THREE.Vector3(0.0, 0.001, 0), "model/Venus/Venus_Terrain_Mat_baseColor.png", mSolarSystem);
+    mVenus.planet.rotation.set(Math.PI, 0, 0);
     mPlanets.push(mVenus);
-    // earth
-    mEarth = initPlanet(1, 20, 0.01, revolutionPivot, new THREE.Vector3(0.0, 0.1, 0), "model/Earth/Earth_Mat_baseColor.png", mSolarSystem);
+    // earth and moon
+    var luna = new THREE.Mesh(new THREE.SphereGeometry(0.25, 32, 32), new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("model/Luna/Luna_Mat_baseColor.png", null, function(t){})})); 
+        luna.position.z = 2;
+    mEarth = createPlanet(1, 20, 0.01, revolutionPivot, new THREE.Vector3(0.0, 0.1, 0), "model/Earth/Earth_Mat_baseColor.png", mSolarSystem, luna);
+    mEarth.planet.rotation.set(Math.PI / 8, 0, 0);    // 转轴倾角，赤道与黄道面夹角
     mPlanets.push(mEarth);
     // mars
-    mMars = initPlanet(0.5, 25, 0.005, revolutionPivot, new THREE.Vector3(0.0, 0.1, 0), "model/Mars/Mars_mat_baseColor.png", mSolarSystem);
+    mMars = createPlanet(0.5, 25, 0.005, revolutionPivot, new THREE.Vector3(0.0, 0.1, 0), "model/Mars/Mars_mat_baseColor.png", mSolarSystem);
+    mMars.planet.rotation.set(Math.PI / 8, 0, 0);
     mPlanets.push(mMars);
     // jupiter
-    mJupiter = initPlanet(4, 35, 0.003, revolutionPivot, new THREE.Vector3(0.0, 0.15, 0), "model/Jupiter/Jupiter_Mat_baseColor.png", mSolarSystem);
+    var jupiterStarRingMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("model/Saturn/SaturnRings_Mat_baseColor.png", null, function(t){})
+    });
+    jupiterStarRingMaterial.side = THREE.DoubleSide;
+    var jupiterStarRing = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.4, 32, 1), jupiterStarRingMaterial);
+    jupiterStarRing.rotation.x = -90 * Math.PI / 180;
+    mJupiter = createPlanet(4, 35, 0.003, revolutionPivot, new THREE.Vector3(0.0, 0.15, 0), "model/Jupiter/Jupiter_Mat_baseColor.png", mSolarSystem, jupiterStarRing);
+    mJupiter.planet.rotation.set(Math.PI / 32, 0, 0);
     mPlanets.push(mJupiter);
     // saturn
-    mSaturn = initPlanet(3, 50, 0.001, revolutionPivot, new THREE.Vector3(0.0, 0.14, 0), "model/Saturn/SaturnPlanet_Opaque_Mat_baseColor.png", mSolarSystem);
+    var saturnStarRingMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("model/Saturn/SaturnRings_Mat_baseColor.png", null, function(t){})
+    });
+    saturnStarRingMaterial.side = THREE.DoubleSide;
+    var saturnStarRing = new THREE.Mesh(new THREE.RingGeometry(1.1, 1.5, 32, 1), saturnStarRingMaterial);
+    saturnStarRing.rotation.x = -90 * Math.PI / 180;
+    mSaturn = createPlanet(3, 50, 0.001, revolutionPivot, new THREE.Vector3(0.0, 0.14, 0), "model/Saturn/SaturnPlanet_Opaque_Mat_baseColor.png", mSolarSystem, saturnStarRing);
+    mSaturn.planet.rotation.set(Math.PI / 8, 0, 0);
     mPlanets.push(mSaturn);
     // uranus
-    mUranus = initPlanet(2, 60, 0.0006, revolutionPivot, new THREE.Vector3(0.0, 0.11, 0), "model/Uranus/UranusGlobe_Mat_baseColor.png", mSolarSystem);
+    mUranus = createPlanet(2, 60, 0.0006, revolutionPivot, new THREE.Vector3(0.0, 0.11, 0), "model/Uranus/UranusGlobe_Mat_baseColor.png", mSolarSystem);
+    mUranus.planet.rotation.set(Math.PI / 2, 0, 0);
     mPlanets.push(mUranus);
     // neptune
-    mNeptune = initPlanet(1.8, 70, 0.0003, revolutionPivot, new THREE.Vector3(0.0, 0.12, 0), "model/Neptune/NeptuneGlobe_Mat_baseColor.png", mSolarSystem);
+    mNeptune = createPlanet(1.8, 70, 0.0003, revolutionPivot, new THREE.Vector3(0.0, 0.12, 0), "model/Neptune/NeptuneGlobe_Mat_baseColor.png", mSolarSystem);
+    mNeptune.planet.rotation.set(Math.PI / 8, 0, 0);
     mPlanets.push(mNeptune);
 }
 
@@ -296,10 +321,12 @@ function render() {
 
 function updateScene() {
     for (var i = 0; i < mPlanets.length; i++) {
-        mPlanets[i].group.rotation.y -= mPlanets[i].speed;
-        mPlanets[i].mesh.rotation.x += mPlanets[i].rotation.x;
-        mPlanets[i].mesh.rotation.y -= mPlanets[i].rotation.y;
+        mPlanets[i].group.rotation.y -= mPlanets[i].speed;  // 公转
+        // 自转
+        mPlanets[i].planet.rotation.x += mPlanets[i].rotation.x;
+        mPlanets[i].planet.rotation.y -= mPlanets[i].rotation.y;
     }
+    mSun.rotation.y -= 0.004;   // 太阳自转速度
 }
 
 function main() {
