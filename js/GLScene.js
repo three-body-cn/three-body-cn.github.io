@@ -75,7 +75,7 @@ GLScene.prototype.createBackground = function() {
         starsGeometry.vertices.push(star);
     }
 
-    var starsMaterial = new THREE.PointsMaterial({color: 0xffffaa, size:20, map:texture});
+    var starsMaterial = new THREE.PointsMaterial({color: 0xffffaa, size:20, map:texture, blending: THREE.AdditiveBlending, transparent: true});
     var starField = new THREE.Points(starsGeometry, starsMaterial);
 
     this.mPhysicsScene.add(starField);
@@ -91,6 +91,10 @@ GLScene.prototype.render = function(fun, renderer, camera, scene, stats) {
 
 GLScene.prototype.addObject = function(object) {
     this.mPhysicsScene.add(object.mMesh)
+    if (undefined != object.mPointLight) 
+        this.mPhysicsScene.add(object.mPointLight);
+    if (undefined != object.mLightSprite) 
+        this.mPhysicsScene.add(object.mLightSprite)
     mUniverse.addObject(object)
 }
 

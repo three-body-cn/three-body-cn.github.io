@@ -3,8 +3,14 @@ function Aster(scene, config) {
     this.mRadius = config.radius;
     this.mLoader = new THREE.TextureLoader();
     this.mType = config.type;
+    this.mLightSprite = undefined;
+    this.mPointLight = undefined;
     if (this.mType == AsterType.STAR) {
         this.mMeshMaterial = new THREE.MeshLambertMaterial({map: this.mLoader.load(config.texPath), emissive: 0x888833});
+        this.mLightSprite = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(this.generateSprite("255, 255, 255")),
+            blending: THREE.AdditiveBlending}));
+        this.mLightSprite.scale.x = this.mLightSprite.scale.y = this.mLightSprite.scale.z = this.mRadius * 4;
+        this.mPointLight = new THREE.PointLight(0x777777, 1, 1000, 0.2);
     } else {
         this.mMeshMaterial = new THREE.MeshLambertMaterial({map: this.mLoader.load(config.texPath)});
     }
@@ -58,5 +64,30 @@ Aster.prototype.logVector3 = function(vector) {
 }
 
 Aster.prototype.update = function() {
-    this.gravityForce(mUniverse.mObjects)
+    this.gravityForce(mUniverse.mObjects);
+    if (undefined != this.mPointLight) 
+        this.mPointLight.position.copy(this.mMesh.position);
+    if (undefined != this.mLightSprite) 
+        this.mLightSprite.position.copy(this.mMesh.position);
+}
+
+/**
+ * 实现球体发光
+ * @param color 颜色的r,g和b值,比如："123,123,123";
+ * @returns {Element} 返回canvas对象
+ */
+Aster.prototype.generateSprite = function (color) {
+    var canvas = document.createElement('canvas');
+    canvas.width = 16;
+    canvas.height = 16;
+    var context = canvas.getContext('2d');
+    var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, 
+        canvas.height / 2, canvas.width / 2);
+    gradient.addColorStop(0, 'rgba(' + color + ',1)');
+    gradient.addColorStop(0.2, 'rgba(' + color + ',1)');
+    gradient.addColorStop(0.4, 'rgba(' + color + ',.6)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    return canvas;
 }

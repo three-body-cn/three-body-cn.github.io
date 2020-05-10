@@ -157,7 +157,7 @@ function initBackground() {
 	    starsGeometry.vertices.push(star);
 	}
 
-	var starsMaterial = new THREE.PointsMaterial({color: 0xffffaa, size:10, map:texture});
+	var starsMaterial = new THREE.PointsMaterial({color: 0xffffaa, size:10, map:texture, blending: THREE.AdditiveBlending, transparent: true});
 	var starField = new THREE.Points(starsGeometry, starsMaterial);
 
 	mSolarSystem.add(starField);
@@ -210,6 +210,8 @@ function initScene() {
     mTrackballControls.zoomSpeed = 1.0;
     mTrackballControls.panSpeed = 1.0;
     mTrackballControls.noZoom=false;
+    mTrackballControls.minDistance = 10;
+    mTrackballControls.maxDistance = 1000;
     mTrackballControls.noPan=false;
     mTrackballControls.staticMoving = true;
     mTrackballControls.dynamicDampingFactor = 0.3;

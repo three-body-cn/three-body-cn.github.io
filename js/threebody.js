@@ -37,7 +37,8 @@ function createUIController(scene) {
     mOrbitControls = new THREE.OrbitControls(scene.mCamera, scene.mRenderer.domElement);
     mOrbitControls.target = new THREE.Vector3(0, 0, 0);
     mOrbitControls.autoRotate = false;
-    clock = new THREE.Clock();
+    mOrbitControls.minDistance = 100;
+    mOrbitControls.maxDistance = 10000;
 }
 
 function main() {
