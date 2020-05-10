@@ -24,7 +24,11 @@ function onKeyPress(event) {
             break;
     }
 
-    requestAnimationFrame(render);
+    if (mShowAssist) {
+        document.getElementById('canvas-frame').appendChild(mGLScene.mStats.domElement);
+    } else {
+        document.getElementById('canvas-frame').removeChild(mGLScene.mStats.domElement);
+    }
 }
 
 function onWindowResize() {

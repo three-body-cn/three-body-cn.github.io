@@ -11,7 +11,6 @@ var GLScene = function() {
     this.mStats.domElement.style.position = 'absolute';
     this.mStats.domElement.style.left = '5px';
     this.mStats.domElement.style.top = '5px';
-    document.getElementById('canvas-frame').appendChild(this.mStats.domElement);
 
     this.mTextureLoader = new THREE.TextureLoader();
 

@@ -44,14 +44,14 @@ function onKeyPress(event) {
             mSaturn.track.visible = mShowAssist;
             mUranus.track.visible = mShowAssist;
             mNeptune.track.visible = mShowAssist;
-            if (mShowAssist) {
-                document.getElementById('canvas-frame').appendChild(mStats.domElement);
-            } else {
-                document.getElementById('canvas-frame').removeChild(mStats.domElement);
-            }
             break;
         default:
             break;
+    }
+    if (mShowAssist) {
+        document.getElementById('canvas-frame').appendChild(mStats.domElement);
+    } else {
+        document.getElementById('canvas-frame').removeChild(mStats.domElement);
     }
 }
 
@@ -102,7 +102,7 @@ function randomNormalDistribution() {
  * @param scene 场景
  * @returns {{satellite: THREE.Mesh, speed: *}} 行星组合对象;速度
 */
-function createPlanet(scale, revolutionRadius, speed, pivot, rotation, imgUrl, scene, satellite = undefined) {
+function createPlanet(scale, revolutionRadius, speed, pivot, rotation, imgUrl, scene, satellite = undefined, normalImgUrl = undefined) {
     var planetAndSatellite = new THREE.Object3D();
     var planetAndTrack = new THREE.Object3D();
     var track = new THREE.Mesh(new THREE.RingGeometry(revolutionRadius, revolutionRadius + 0.05, 48, 1), new THREE.MeshBasicMaterial());
@@ -110,8 +110,12 @@ function createPlanet(scale, revolutionRadius, speed, pivot, rotation, imgUrl, s
     track.visible = mShowAssist;
     planetAndTrack.add(track);
     
-    var mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), new THREE.MeshLambertMaterial({
-        map: THREE.ImageUtils.loadTexture(imgUrl, null, function(t){})})); 
+    var material = new THREE.MeshPhongMaterial({
+        map: THREE.ImageUtils.loadTexture(imgUrl, null, function(t){})
+    });
+    if (undefined != normalImgUrl) 
+        material.normalMap = new THREE.ImageUtils.loadTexture(normalImgUrl);
+    var mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), material); 
     planetAndSatellite.add(mesh);
     if (undefined != satellite) 
         planetAndSatellite.add(satellite);
@@ -266,7 +270,8 @@ function initObjects() {
     var luna = new THREE.Mesh(new THREE.SphereGeometry(0.25, 32, 32), new THREE.MeshLambertMaterial({
         map: THREE.ImageUtils.loadTexture("model/Luna/Luna_Mat_baseColor.png", null, function(t){})})); 
         luna.position.z = 2;
-    mEarth = createPlanet(1, 20, 0.01, revolutionPivot, new THREE.Vector3(0.0, 0.1, 0), "model/Earth/Earth_Mat_baseColor.png", mSolarSystem, luna);
+    mEarth = createPlanet(1, 20, 0.01, revolutionPivot, new THREE.Vector3(0.0, 0.1, 0), "model/Earth/Earth_Mat_baseColor.png", 
+        mSolarSystem, luna, "model/Earth/Earth_Mat_normal.png");
     mEarth.planet.rotation.set(Math.PI / 8, 0, 0);    // 转轴倾角，赤道与黄道面夹角
     mPlanets.push(mEarth);
     // mars
