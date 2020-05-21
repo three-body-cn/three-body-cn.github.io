@@ -12,6 +12,13 @@ var GLScene = function() {
     this.mStats.domElement.style.left = '5px';
     this.mStats.domElement.style.top = '5px';
 
+    this.mMeshGrid = new THREE.Geometry();
+    this.mMeshLineMaterial = new THREE.LineBasicMaterial({color: 0xffffff, opacity: 0.2});
+    this.mMeshLineMaterial.visible = false;
+
+    this.mAxis = new THREE.AxesHelper(500);
+    this.mAxis.material.visible = false;
+
     this.mTextureLoader = new THREE.TextureLoader();
 
     this.mPhysicsScene = new Physijs.Scene;
@@ -25,6 +32,7 @@ var GLScene = function() {
     
     this.createCamera();
     this.createLights();
+    this.createAssists();
     this.createBackground();
     this.mPhysicsScene.simulate();
     this.render(this.render, this.mRenderer, this.mCamera, this.mPhysicsScene, this.mStats);
@@ -78,6 +86,28 @@ GLScene.prototype.createBackground = function() {
     var starField = new THREE.Points(starsGeometry, starsMaterial);
 
     this.mPhysicsScene.add(starField);
+}
+
+GLScene.prototype.createAssists = function() {
+    this.mMeshGrid.vertices.push(new THREE.Vector3(-500, 0, 0));
+    this.mMeshGrid.vertices.push(new THREE.Vector3( 500, 0, 0));
+    for (var i = 0; i <= 10; i ++) {
+        var line = new THREE.Line(this.mMeshGrid, this.mMeshLineMaterial);
+        line.position.z = (i * 100) - 500;
+        this.mPhysicsScene.add(line);
+
+        var line = new THREE.Line(this.mMeshGrid, this.mMeshLineMaterial);
+        line.position.x = (i * 100) - 500;
+        line.rotation.y = 90 * Math.PI / 180;
+        this.mPhysicsScene.add(line);
+    }
+
+    this.mPhysicsScene.add(this.mAxis);
+}
+
+GLScene.prototype.updateAssistVisible = function(visible) {
+    this.mAxis.material.visible = visible;
+    this.mMeshLineMaterial.visible = visible;
 }
 
 GLScene.prototype.render = function(fun, renderer, camera, scene, stats) {
