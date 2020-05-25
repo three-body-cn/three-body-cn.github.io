@@ -123,7 +123,9 @@ GLScene.prototype.addObject = function(object) {
     if (undefined != object.mPointLight) 
         this.mPhysicsScene.add(object.mPointLight);
     if (undefined != object.mLightSprite) 
-        this.mPhysicsScene.add(object.mLightSprite)
+        this.mPhysicsScene.add(object.mLightSprite);
+    // if (undefined != object.mTrackLine) 
+    //     this.mPhysicsScene.add(object.mTrackLine);
     mUniverse.addObject(object)
 }
 
