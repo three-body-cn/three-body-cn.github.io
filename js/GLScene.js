@@ -1,7 +1,8 @@
 var GLScene = function() {
-    this.DISTANCE_BUFFER = 1000;
+    this.DISTANCE_BUFFER = 500;
     this.FOV = 45;
     var mScene = this;
+    this.mDebug = false;
     this.mRenderer = new THREE.WebGLRenderer({
         antialias : true
     });
@@ -28,7 +29,7 @@ var GLScene = function() {
     this.mPhysicsScene.addEventListener(
 		'update',
 		function() {
-			mScene.onUpdate();
+			mScene.onUpdate(mScene.mDebug);
 		}
     );
     
@@ -83,9 +84,10 @@ GLScene.prototype.createAssists = function() {
     this.mPhysicsScene.add(this.mAxis);
 }
 
-GLScene.prototype.updateAssistVisible = function(visible) {
+GLScene.prototype.updateAssistVisible = function(visible, debug) {
     this.mAxis.material.visible = visible;
     this.mMeshLineMaterial.visible = visible;
+    this.mDebug = debug;
 }
 
 GLScene.prototype.render = function(fun, renderer, camera, scene, stats) {
@@ -141,6 +143,9 @@ GLScene.prototype.onUpdate = function(debug) {
         if (mUniverse.mObjects[i].update != undefined) {
             mUniverse.mObjects[i].update();
         }
+        if (mUniverse.mObjects[i].mType != AsterType.STAR) {
+            continue;   // camera do not always watch planet or satellite
+        }
         maxX = Math.max(maxX, mUniverse.mObjects[i].mMesh.position.x);
         maxY = Math.max(maxY, mUniverse.mObjects[i].mMesh.position.y);
         maxZ = Math.max(maxZ, mUniverse.mObjects[i].mMesh.position.z);
@@ -173,6 +178,10 @@ GLScene.prototype.onUpdate = function(debug) {
     if (debug) {
         console.log(getTimeWithNum(mUniverse.mUniverseTime));
         console.log(this.mCamera.position);
+        console.log(this.mCamera.lookAt);
+        for (var i = 0; i < mUniverse.mObjects.length; i++) {
+            console.log(mUniverse.mObjects[i].mMesh.position)
+        }
     }
 
     this.mPhysicsScene.simulate(undefined, 1);

@@ -7,6 +7,7 @@ var mGLScene;
 var mSimData = ''
 var mDataLoader = new DataLoader()
 var mShowAssist = false;
+var mPrintLog = false;
 
 function onKeyPress(event) {
     var key;
@@ -19,18 +20,23 @@ function onKeyPress(event) {
         case 'G':
         case 'g':
             mShowAssist = !mShowAssist;
+            if (null != mGLScene) {
+                if (mShowAssist) {
+                    document.getElementById('canvas-frame').appendChild(mGLScene.mStats.domElement);
+                } else {
+                    document.getElementById('canvas-frame').removeChild(mGLScene.mStats.domElement);
+                }
+            }
+            break;
+        case 'P':
+        case 'p':
+            mPrintLog = !mPrintLog;
+            if (null != mGLScene) {
+                mGLScene.updateAssistVisible(mShowAssist, mPrintLog);
+            }
             break;
         default:
             break;
-    }
-
-    if (null != mGLScene) {
-        if (mShowAssist) {
-            document.getElementById('canvas-frame').appendChild(mGLScene.mStats.domElement);
-        } else {
-            document.getElementById('canvas-frame').removeChild(mGLScene.mStats.domElement);
-        }
-        mGLScene.updateAssistVisible(mShowAssist);
     }
 }
 

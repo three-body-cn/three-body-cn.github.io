@@ -1,5 +1,5 @@
 function Universe() {
-	this.mObjects=[];
+	this.mObjects=[];	// Aster
 	this.mScene = new GLScene();
 	this.mUniverseTime = 0;
 	this.mRunning = true;
