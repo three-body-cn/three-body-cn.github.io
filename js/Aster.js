@@ -5,6 +5,7 @@ function Aster(scene, config) {
     this.mType = config.type;
     this.mLightSprite = undefined;
     this.mPointLight = undefined;
+    this.mFirst = false;
     if (this.mType == AsterType.STAR) {
         this.mMeshMaterial = new THREE.MeshLambertMaterial({map: this.mLoader.load(config.texPath), emissive: 0x888833});
         this.mLightSprite = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(this.generateSprite("255, 255, 255")),
@@ -78,7 +79,10 @@ Aster.prototype.showTrack = function() {
     }
     this.mTrack.vertices.unshift(this.mMesh.position.clone());  // THREE.Vector3,头部添加
     this.mTrack.verticesNeedUpdate = true;
-    this.mScene.addElement(this.mTrackLine);
+    if (!this.mFirst) {
+        this.mScene.addElement(this.mTrackLine);
+        this.mFirst = true;
+    }
 }
 
 Aster.prototype.update = function() {

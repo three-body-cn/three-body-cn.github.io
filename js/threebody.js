@@ -8,6 +8,8 @@ var mSimData = ''
 var mDataLoader = new DataLoader()
 var mShowAssist = false;
 var mPrintLog = false;
+var mGLView = null;
+var mTimeOut = null;
 
 function onKeyPress(event) {
     var key;
@@ -22,9 +24,9 @@ function onKeyPress(event) {
             mShowAssist = !mShowAssist;
             if (null != mGLScene) {
                 if (mShowAssist) {
-                    document.getElementById('canvas-frame').appendChild(mGLScene.mStats.domElement);
+                    mGLView.appendChild(mGLScene.mStats.domElement);
                 } else {
-                    document.getElementById('canvas-frame').removeChild(mGLScene.mStats.domElement);
+                    mGLView.removeChild(mGLScene.mStats.domElement);
                 }
             }
             break;
@@ -32,7 +34,7 @@ function onKeyPress(event) {
         case 'p':
             mPrintLog = !mPrintLog;
             if (null != mGLScene) {
-                mGLScene.updateAssistVisible(mShowAssist, mPrintLog);
+                mGLScene.updateStatus(mShowAssist, mPrintLog);
             }
             break;
         default:
@@ -54,14 +56,43 @@ function createUIController(scene) {
     mOrbitControls.maxDistance = 10000;
 }
 
+function handleMouseDown() {
+    if (undefined != mTimeOut) 
+        window.clearTimeout(mTimeOut);
+    mGLScene.updateStatus(mShowAssist, mPrintLog, true);
+}
+
+function handleMouseUp() {
+    mTimeOut = setTimeout(recoverMouseViewStatus, 5000);
+}
+
+function handleMouseMove() {
+    
+}
+
+function handleMouseOut() {
+    
+}
+
+function recoverMouseViewStatus() {
+    mGLScene.updateStatus(mShowAssist, mPrintLog, false);
+}
+
 function main() {
+    mGLView = document.getElementById('canvas-frame');
+    // mouse
+    mGLView.onmousedown = handleMouseDown;
+    mGLView.onmouseup = handleMouseUp;
+    mGLView.onmousemove = handleMouseMove;
+    mGLView.onmouseout = handleMouseOut;
+
     // onSurfaceChanged
     window.addEventListener('resize', onWindowResize, false);
 
     mDataLoader.loadSimData('three-solar-system.json', function(data) {
         mSimData = JSON.stringify(data, null, "\t")
     });
-    if (mSimData == undefined){
+    if (mSimData == undefined) {
         alert('illegal mSimData')
         return
     }

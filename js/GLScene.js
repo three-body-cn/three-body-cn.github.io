@@ -3,6 +3,7 @@ var GLScene = function() {
     this.FOV = 45;
     var mScene = this;
     this.mDebug = false;
+    this.mMouseView = false;
     this.mRenderer = new THREE.WebGLRenderer({
         antialias : true
     });
@@ -84,10 +85,11 @@ GLScene.prototype.createAssists = function() {
     this.mPhysicsScene.add(this.mAxis);
 }
 
-GLScene.prototype.updateAssistVisible = function(visible, debug) {
+GLScene.prototype.updateStatus = function(visible, debug, mouseView) {
     this.mAxis.material.visible = visible;
     this.mMeshLineMaterial.visible = visible;
     this.mDebug = debug;
+    this.mMouseView = mouseView;
 }
 
 GLScene.prototype.render = function(fun, renderer, camera, scene, stats) {
@@ -104,8 +106,8 @@ GLScene.prototype.addObject = function(object) {
         this.mPhysicsScene.add(object.mPointLight);
     if (undefined != object.mLightSprite) 
         this.mPhysicsScene.add(object.mLightSprite);
-    // if (undefined != object.mTrackLine) 
-    //     this.mPhysicsScene.add(object.mTrackLine);
+    if (undefined != object.mTrackLine) 
+        this.mPhysicsScene.add(object.mTrackLine);
     mUniverse.addObject(object)
 }
 
@@ -143,6 +145,7 @@ GLScene.prototype.onUpdate = function(debug) {
         if (mUniverse.mObjects[i].update != undefined) {
             mUniverse.mObjects[i].update();
         }
+
         if (mUniverse.mObjects[i].mType != AsterType.STAR) {
             continue;   // camera do not always watch planet or satellite
         }
@@ -154,25 +157,27 @@ GLScene.prototype.onUpdate = function(debug) {
         minZ = Math.min(minZ, mUniverse.mObjects[i].mMesh.position.z);
     }
 
-    var deltaX = maxX - minX;
-    var deltaY = maxY - minY;
-    var deltaZ = maxZ - minZ;
-    var maxDelta = Math.max(deltaX, Math.max(deltaY, deltaZ));
-    var cameraX = (maxX + minX) / 2;
-    var cameraY = (maxY + minY) / 2;
-    var cameraZ = (maxZ + minZ) / 2;
-    this.mCamera.lookAt(cameraX, cameraY, cameraZ);
-    if (deltaX < deltaY && deltaX < deltaZ) {   // Camera改变x坐标，观察Y-Z平面
-        cameraX = (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
-    } else if (deltaY < deltaX && deltaY < deltaZ) {
-        cameraY = (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
-    } else {
-        cameraZ = (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
-    }
+    if (!this.mMouseView) {
+        var deltaX = maxX - minX;
+        var deltaY = maxY - minY;
+        var deltaZ = maxZ - minZ;
+        var maxDelta = Math.max(deltaX, Math.max(deltaY, deltaZ));
+        var cameraX = (maxX + minX) / 2;
+        var cameraY = (maxY + minY) / 2;
+        var cameraZ = (maxZ + minZ) / 2;
+        this.mCamera.lookAt(cameraX, cameraY, cameraZ);
+        if (deltaX < deltaY && deltaX < deltaZ) {   // Camera改变x坐标，观察Y-Z平面
+            cameraX = (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
+        } else if (deltaY < deltaX && deltaY < deltaZ) {
+            cameraY = (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
+        } else {
+            cameraZ = (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
+        }
 
-    this.mCamera.position.x = cameraX;
-    this.mCamera.position.y = cameraY;
-    this.mCamera.position.z = -cameraZ;
+        this.mCamera.position.x = cameraX;
+        this.mCamera.position.y = cameraY;
+        this.mCamera.position.z = -cameraZ;
+    }
 
     mUniverse.mUniverseTime++;
     if (debug) {
