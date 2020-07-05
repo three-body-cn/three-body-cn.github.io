@@ -1,7 +1,7 @@
 Physijs.scripts.worker = './js/public/three/physijs_worker.js';
 Physijs.scripts.ammo = 'ammo.js';
 
-var civilizationNum = 0;
+var mCivilizationNum = 0;
 var mUniverse;
 var mOrbitControls;
 var mGLScene;
@@ -83,12 +83,17 @@ function recoverMouseViewStatus() {
 
 function disasterHappened(disasterType) {
     if (disasterType == DisasterType.STAR_COLLISION) {
-        alertDialog('第号文明毁灭于双日相撞，该文明持续了年，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续开始在三体世界中命运莫测的进化。', 10000);
+        alertDialog('第$号文明毁灭于双日相撞，该文明持续了$年，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续开始在三体世界中命运莫测的进化。', 10000, restartUniverse);
     } else if (disasterType == DisasterType.STAR_EAT_EARTH) {
-        alertDialog('第号文明在烈焰中被毁灭了，该文明持续了年，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续开始在三体世界中命运莫测的进化。', 10000);
+        alertDialog('第$号文明在烈焰中被毁灭了，该文明持续了$年，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续开始在三体世界中命运莫测的进化。', 10000, restartUniverse);
     } else if (disasterType == DisasterType.THREE_SOLAR_FAR_AWAY) {
-        alertDialog('这一夜持续了年，第号文明毁灭于漫长的严寒岁月，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续开始在三体世界中命运莫测的进化。', 10000);
+        alertDialog('这一夜持续了$年，第$号文明毁灭于漫长的严寒岁月，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续开始在三体世界中命运莫测的进化。', 10000, restartUniverse);
     }
+}
+
+function restartUniverse() {
+    // random
+
 }
 
 function main() {
