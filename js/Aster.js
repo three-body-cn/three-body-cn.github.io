@@ -1,4 +1,4 @@
-function Aster(scene, config) {
+function Aster(scene, config, endCallback) {
     this.mScene = scene;
     this.mRadius = config.radius;
     this.mLoader = new THREE.TextureLoader();
@@ -27,9 +27,17 @@ function Aster(scene, config) {
 		this.mMaterial,
 		mass = config.mass
     );
+    this.mMesh.name = this.mType;
     this.mMesh.position.set(config.pos.x, config.pos.y, config.pos.z);
     this.mMesh.radius = config.radius;
-    this.mMesh.name = name;
+    this.mMesh.addEventListener('collision', function(otherObject, relativeVelocity, relativeRotation, contactNormal) {
+        console.log('Stars collision happens, current type is :' + this.name + ', otherObject type is ' + otherObject.name);
+        if (this.name != otherObject.name) {
+            endCallback(DisasterType.STAR_EAT_EARTH);
+        } else if (this.name == otherObject.name && this.name == '0') {
+            endCallback(DisasterType.STAR_COLLISION);
+        }
+    });
 
     // assist
     this.mTrack = new THREE.Geometry();

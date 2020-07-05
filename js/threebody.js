@@ -1,6 +1,7 @@
 Physijs.scripts.worker = './js/public/three/physijs_worker.js';
 Physijs.scripts.ammo = 'ammo.js';
 
+var civilizationNum = 0;
 var mUniverse;
 var mOrbitControls;
 var mGLScene;
@@ -67,15 +68,27 @@ function handleMouseUp() {
 }
 
 function handleMouseMove() {
-    
 }
 
 function handleMouseOut() {
-    
+}
+
+function handleMouseWheel() {
+    console.log('handleMouseWheel');
 }
 
 function recoverMouseViewStatus() {
     mGLScene.updateStatus(mShowAssist, mPrintLog, false);
+}
+
+function disasterHappened(disasterType) {
+    if (disasterType == DisasterType.STAR_COLLISION) {
+        alertDialog('第号文明毁灭于双日相撞，该文明持续了年，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续开始在三体世界中命运莫测的进化。', 10000);
+    } else if (disasterType == DisasterType.STAR_EAT_EARTH) {
+        alertDialog('第号文明在烈焰中被毁灭了，该文明持续了年，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续开始在三体世界中命运莫测的进化。', 10000);
+    } else if (disasterType == DisasterType.THREE_SOLAR_FAR_AWAY) {
+        alertDialog('这一夜持续了年，第号文明毁灭于漫长的严寒岁月，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续开始在三体世界中命运莫测的进化。', 10000);
+    }
 }
 
 function main() {
@@ -85,6 +98,8 @@ function main() {
     mGLView.onmouseup = handleMouseUp;
     mGLView.onmousemove = handleMouseMove;
     mGLView.onmouseout = handleMouseOut;
+	mGLView.addEventListener('mousewheel', handleMouseWheel, false);
+	mGLView.addEventListener('DOMMouseScroll', handleMouseWheel, false); // firefox
 
     // onSurfaceChanged
     window.addEventListener('resize', onWindowResize, false);
@@ -99,10 +114,15 @@ function main() {
 
     try {
         mUniverse = new Universe();
-        mUniverse.start(function(scene) {
-            mGLScene = scene;
-            createUIController(scene);
-        }, JSON.parse(mSimData))
+        mUniverse.start(
+            function(scene) {
+                mGLScene = scene;
+                createUIController(scene);
+            }, 
+            function(disasterType) {
+                disasterHappened(disasterType);
+            },
+            JSON.parse(mSimData))
     } catch (e) {
         alert('illegal data:' + e);
     }

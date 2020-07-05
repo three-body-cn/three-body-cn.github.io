@@ -85,7 +85,7 @@ GLScene.prototype.createAssists = function() {
     this.mPhysicsScene.add(this.mAxis);
 }
 
-GLScene.prototype.updateStatus = function(visible, debug, mouseView) {
+GLScene.prototype.updateStatus = function(visible, debug, mouseView = false) {
     this.mAxis.material.visible = visible;
     this.mMeshLineMaterial.visible = visible;
     this.mDebug = debug;
@@ -181,12 +181,17 @@ GLScene.prototype.onUpdate = function(debug) {
 
     mUniverse.mUniverseTime++;
     if (debug) {
-        console.log(getTimeWithNum(mUniverse.mUniverseTime));
+        console.log('------------------------------------------ start ------------------------------------------');
+        console.log('Current time is : ' + getTimeWithNum(mUniverse.mUniverseTime));
+        console.log('Current camera pos is : ');
         console.log(this.mCamera.position);
+        console.log('Current camera look at : ');
         console.log(this.mCamera.lookAt);
         for (var i = 0; i < mUniverse.mObjects.length; i++) {
+            console.log('Number ' + i + ', type = ' + mUniverse.mObjects[i].mType +', aster pos: ');
             console.log(mUniverse.mObjects[i].mMesh.position)
         }
+        console.log('------------------------------------------- end -------------------------------------------');
     }
 
     this.mPhysicsScene.simulate(undefined, 1);
