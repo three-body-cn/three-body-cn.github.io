@@ -46,8 +46,6 @@ function Aster(scene, config, endCallback) {
     // this.mTrack.vertices.push(new THREE.Vector3(this.mMesh.position.x + 300, this.mMesh.position.y + 500, this.mMesh.position.z + 1000));
     this.mTrackLineMaterial = new THREE.LineBasicMaterial({color: config.trackColor, linewidth: 5});
     this.mTrackLine = new THREE.Line(this.mTrack, this.mTrackLineMaterial);
-    // debug
-    this.debugLogCnt = 10;
 }
 
 Aster.prototype.gravityForce = function(asters, debug = false) {
@@ -64,17 +62,16 @@ Aster.prototype.gravityForce = function(asters, debug = false) {
                     .divideScalar(Math.pow(distance,2));
         force.add(oneForce);
         
-        if (debug && this.debugLogCnt > 0) {
+        if (debug) {
             console.log("oneForce:" + this.logVector3(oneForce));
             console.log("force:" + this.logVector3(force));
         }
     }
-    if (debug && this.debugLogCnt > 0) {
+    if (debug) {
         console.log("all force:" + this.logVector3(force));
         console.log("position:" + this.logVector3(this.mMesh.position));
     }
     this.mMesh.applyForce(force, new THREE.Vector3(0,0,0));
-    this.debugLogCnt--;
 }
 
 Aster.prototype.logVector3 = function(vector) {
@@ -93,8 +90,8 @@ Aster.prototype.showTrack = function() {
     }
 }
 
-Aster.prototype.update = function() {
-    this.gravityForce(mUniverse.mObjects);
+Aster.prototype.update = function(debug) {
+    this.gravityForce(mUniverse.mObjects, debug);
     if (undefined != this.mPointLight) 
         this.mPointLight.position.copy(this.mMesh.position);
     if (undefined != this.mLightSprite) 

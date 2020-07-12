@@ -67,6 +67,24 @@ function handleMouseUp() {
     mTimeOut = setTimeout(recoverMouseViewStatus, 5000);
 }
 
+function handleTouchMove() {
+
+}
+
+function handleTouchStart() {
+    if (undefined != mTimeOut) 
+        window.clearTimeout(mTimeOut);
+    mGLScene.updateStatus(mShowAssist, mPrintLog, true);
+}
+
+function handleTouchEnd() {
+    mTimeOut = setTimeout(recoverMouseViewStatus, 5000);
+}
+
+function handleTouchCancel() {
+
+}
+
 function handleMouseMove() {
 }
 
@@ -83,11 +101,11 @@ function recoverMouseViewStatus() {
 
 function disasterHappened(disasterType) {
     if (disasterType == DisasterType.STAR_COLLISION) {
-        alertDialog('第$号文明毁灭于双日相撞，该文明持续了$年，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续开始在三体世界中命运莫测的进化。', 10000, restartUniverse);
+        alertDialog('第$号文明毁灭于双日相撞，该文明持续了$年，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续在三体世界中命运莫测的进化。', 10000, restartUniverse);
     } else if (disasterType == DisasterType.STAR_EAT_EARTH) {
-        alertDialog('第$号文明在烈焰中被毁灭了，该文明持续了$年，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续开始在三体世界中命运莫测的进化。', 10000, restartUniverse);
+        alertDialog('第$号文明在烈焰中被毁灭了，该文明持续了$年，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续在三体世界中命运莫测的进化。', 10000, restartUniverse);
     } else if (disasterType == DisasterType.THREE_SOLAR_FAR_AWAY) {
-        alertDialog('这一夜持续了$年，第$号文明毁灭于漫长的严寒岁月，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续开始在三体世界中命运莫测的进化。', 10000, restartUniverse);
+        alertDialog('这一夜持续了$年，第$号文明毁灭于漫长的严寒岁月，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续在三体世界中命运莫测的进化。', 10000, restartUniverse);
     }
 }
 
@@ -103,6 +121,10 @@ function main() {
     mGLView.onmouseup = handleMouseUp;
     mGLView.onmousemove = handleMouseMove;
     mGLView.onmouseout = handleMouseOut;
+    mGLView.ontouchmove = handleTouchMove;
+    mGLView.ontouchstart = handleTouchStart;
+    mGLView.ontouchend = handleTouchEnd;
+    mGLView.ontouchcancel = handleTouchCancel;
 	mGLView.addEventListener('mousewheel', handleMouseWheel, false);
 	mGLView.addEventListener('DOMMouseScroll', handleMouseWheel, false); // firefox
 

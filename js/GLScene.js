@@ -143,7 +143,7 @@ GLScene.prototype.onUpdate = function(debug) {
     var minZ = Number.MAX_SAFE_INTEGER;
     for (var i = 0; i < mUniverse.mObjects.length; i++) {
         if (mUniverse.mObjects[i].update != undefined) {
-            mUniverse.mObjects[i].update();
+            mUniverse.mObjects[i].update(this.mDebug);
         }
 
         if (mUniverse.mObjects[i].mType != AsterType.STAR) {
@@ -158,20 +158,20 @@ GLScene.prototype.onUpdate = function(debug) {
     }
 
     if (!this.mMouseView) {
-        var deltaX = maxX - minX;
-        var deltaY = maxY - minY;
-        var deltaZ = maxZ - minZ;
+        var deltaX = Math.abs(maxX - minX);
+        var deltaY = Math.abs(maxY - minY);
+        var deltaZ = Math.abs(maxZ - minZ);
         var maxDelta = Math.max(deltaX, Math.max(deltaY, deltaZ));
         var cameraX = (maxX + minX) / 2;
         var cameraY = (maxY + minY) / 2;
         var cameraZ = (maxZ + minZ) / 2;
         this.mCamera.lookAt(cameraX, cameraY, cameraZ);
         if (deltaX < deltaY && deltaX < deltaZ) {   // Camera改变x坐标，观察Y-Z平面
-            cameraX = (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
+            cameraX += (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
         } else if (deltaY < deltaX && deltaY < deltaZ) {
-            cameraY = (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
+            cameraY += (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
         } else {
-            cameraZ = (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
+            cameraZ += (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
         }
 
         this.mCamera.position.x = cameraX;
