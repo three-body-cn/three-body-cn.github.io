@@ -7,7 +7,14 @@ function Aster(scene, config, endCallback) {
     this.mPointLight = undefined;
     this.mFirst = false;
     if (this.mType == AsterType.STAR) {
-        this.mMeshMaterial = new THREE.MeshLambertMaterial({map: this.mLoader.load(config.texPath), emissive: 0x888833});
+        // this.mMeshMaterial = new THREE.MeshLambertMaterial({map: this.mLoader.load(config.texPath), emissive: 0x888833});
+        this.mMeshMaterial = new THREE.MeshPhysicalMaterial({   // PBR Material
+            map: this.mLoader.load(config.texPath), 
+            emissive: 0x888833, 
+            emissiveMap: this.mLoader.load(config.emmTexPath), 
+            metalness: 0.1, 
+            roughness: 0.8
+        });
         this.mLightSprite = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(this.generateSprite("255, 255, 255")),
             blending: THREE.AdditiveBlending}));
         this.mLightSprite.scale.x = this.mLightSprite.scale.y = this.mLightSprite.scale.z = this.mRadius * 4;

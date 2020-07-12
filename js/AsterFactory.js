@@ -1,6 +1,7 @@
 // 创建恒星
 function createStar(scene, config, endCallback) {
     config.texPath = './model/Solar/Sol_Opaque_Mat_baseColor.png';
+    config.emmTexPath = './model/Solar/Sol_Opaque_Mat_emissive.png';
     config.trackColor = 0xffff00;
     var star = new Aster(scene, config, endCallback);
     scene.addObject(star);
