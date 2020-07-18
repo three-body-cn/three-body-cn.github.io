@@ -1,4 +1,4 @@
-var GLScene = function() {
+var GLScene = function(updateCallback) {
     this.DISTANCE_BUFFER = 500;
     this.FOV = 45;
     var mScene = this;
@@ -30,7 +30,7 @@ var GLScene = function() {
     this.mPhysicsScene.addEventListener(
 		'update',
 		function() {
-			mScene.onUpdate(mScene.mDebug);
+			mScene.onUpdate(updateCallback, mScene.mDebug);
 		}
     );
     
@@ -131,7 +131,7 @@ GLScene.prototype.onWindowResize = function() {
     this.mRenderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-GLScene.prototype.onUpdate = function(debug) {
+GLScene.prototype.onUpdate = function(updateCallback, debug) {
     if (!mUniverse.mRunning) {
         return ;
     }
@@ -157,6 +157,7 @@ GLScene.prototype.onUpdate = function(debug) {
         minZ = Math.min(minZ, mUniverse.mObjects[i].mMesh.position.z);
     }
 
+    updateCallback(new THREE.Vector3((maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2));
     if (!this.mMouseView) {
         var deltaX = Math.abs(maxX - minX);
         var deltaY = Math.abs(maxY - minY);
@@ -168,9 +169,11 @@ GLScene.prototype.onUpdate = function(debug) {
         this.mCamera.lookAt(cameraX, cameraY, cameraZ);
         if (deltaX < deltaY && deltaX < deltaZ) {   // Camera改变x坐标，观察Y-Z平面
             cameraX += (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
-        } else if (deltaY < deltaX && deltaY < deltaZ) {
-            cameraY += (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
-        } else {
+        } 
+        // else if (deltaY < deltaX && deltaY < deltaZ) {   // 观察X-Z平面
+        //     cameraY += (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
+        // } 
+        else {
             cameraZ += (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
         }
 

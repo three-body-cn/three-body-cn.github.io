@@ -140,7 +140,11 @@ function main() {
     }
 
     try {
-        mUniverse = new Universe();
+        mUniverse = new Universe(
+            function(center) {
+                mOrbitControls.target = center;
+            }
+        );
         mUniverse.start(
             function(scene) {
                 mGLScene = scene;

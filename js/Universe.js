@@ -1,10 +1,9 @@
-function Universe() {
+function Universe(updateCallback) {
 	this.mObjects=[];	// Aster
-	this.mScene = new GLScene();
+	this.mScene = new GLScene(updateCallback);
 	this.mUniverseTime = 0;
 	this.mRunning = true;
 	this.G = 66725.9;	// 万有引力常量
-	this.mEndCallback = undefined;
 }
 
 Universe.prototype.addObject = function(object) {
@@ -18,7 +17,6 @@ Universe.prototype.removeObject = function(object) {
 Universe.prototype.start = function(startCallback, endCallback, configData = undefined) {
 	this.createAsters(configData['asters'], endCallback);
 	startCallback(this.mScene);
-	this.mEndCallback = endCallback;
 }
 
 Universe.prototype.createAsters = function(asterDatas, endCallback) {

@@ -10,6 +10,7 @@ function Aster(scene, config, endCallback) {
         // this.mMeshMaterial = new THREE.MeshLambertMaterial({map: this.mLoader.load(config.texPath), emissive: 0x888833});
         this.mMeshMaterial = new THREE.MeshPhysicalMaterial({   // PBR Material
             map: this.mLoader.load(config.texPath), 
+            alphaMap: this.mLoader.load(config.transPath),
             emissive: 0x888833, 
             emissiveMap: this.mLoader.load(config.emmTexPath), 
             metalness: 0.1, 
