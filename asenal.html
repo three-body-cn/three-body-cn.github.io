@@ -27,13 +27,13 @@
     </head>
 
     <body onkeypress="game.onKeyPress.call(game, event)">
-        <script type="module" src="js/demos/airshed.js"></script>
+        <script type="module" src="js/demos/asenal.js"></script>
         <script type="module" >
-            import {AirShed} from "./js/demos/airshed.js";
+            import {Asenal} from "./js/demos/asenal.js";
 
             var game;
             document.addEventListener("DOMContentLoaded", function() {
-                game = new AirShed(); 
+                game = new Asenal(); 
                 window.game = game;
             });
         </script>

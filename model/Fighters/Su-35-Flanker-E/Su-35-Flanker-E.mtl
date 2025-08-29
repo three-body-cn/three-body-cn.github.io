@@ -1,0 +1,44 @@
+# 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
+# File Created: 29.04.2015 17:12:23
+
+newmtl 99eb5b51_dds
+	Ns 10.000000
+	Ni 1.500000
+	d 1.000000
+	Tr 0.000000
+	Tf 1.000000 1.000000 1.000000 
+	illum 2
+	Ka 0.700000 0.700000 0.700000
+	Kd 0.700000 0.700000 0.700000
+	Ks 0.100000 0.100000 0.100000
+	Ke 0.000000 0.000000 0.000000
+	map_Ka C:\Users\vados\Desktop\3D models\Ace Combat Assault Horizon\air\Su-35 Flanker-E\textures\texture_0001.dds
+	map_Kd C:\Users\vados\Desktop\3D models\Ace Combat Assault Horizon\air\Su-35 Flanker-E\textures\texture_0001.dds
+
+newmtl d38ddc56_dds
+	Ns 10.000000
+	Ni 1.500000
+	d 1.000000
+	Tr 0.000000
+	Tf 1.000000 1.000000 1.000000 
+	illum 2
+	Ka 0.700000 0.700000 0.700000
+	Kd 0.700000 0.700000 0.700000
+	Ks 0.100000 0.100000 0.100000
+	Ke 0.000000 0.000000 0.000000
+	map_Ka C:\Users\vados\Desktop\3D models\Ace Combat Assault Horizon\air\Su-35 Flanker-E\textures\texture_0006.dds
+	map_Kd C:\Users\vados\Desktop\3D models\Ace Combat Assault Horizon\air\Su-35 Flanker-E\textures\texture_0006.dds
+
+newmtl 14a876ec_dds
+	Ns 10.000000
+	Ni 1.500000
+	d 1.000000
+	Tr 0.000000
+	Tf 1.000000 1.000000 1.000000 
+	illum 2
+	Ka 0.700000 0.700000 0.700000
+	Kd 0.700000 0.700000 0.700000
+	Ks 0.100000 0.100000 0.100000
+	Ke 0.000000 0.000000 0.000000
+	map_Ka C:\Users\vados\Desktop\3D models\Ace Combat Assault Horizon\air\Su-35 Flanker-E\textures\texture_0008.dds
+	map_Kd C:\Users\vados\Desktop\3D models\Ace Combat Assault Horizon\air\Su-35 Flanker-E\textures\texture_0008.dds
