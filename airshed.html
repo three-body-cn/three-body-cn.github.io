@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>机库</title>
+        <script src="js/public/three/three.js" data-ke-src="public/three/three.js"></script>
+        <script src="js/public/three/stats.min.js"></script>
+        <script src="js/public/three/TrackballControls.js"></script>
+        <script src="js/public/three/OrbitControls.js"></script>
+        <script src="js/public/three/Lensflare.js"></script>
+        <script src="js/public/three/loaders/FBXLoader.js"></script>
+        <script src="js/public/three/loaders/MTLLoader.js"></script>
+        <script src="js/public/three/loaders/OBJLoader.js"></script>
+        <script src="js/public/three/loaders/TGALoader.js"></script>
+        <script src="js/public/three/loaders/DDSLoader.js"></script>
+        <script src="js/public/libs/inflate.min.js"></script>
+        <style type="text/css">
+            div#canvas-frame {
+                border: none;
+                cursor: pointer;
+                width: 100%;
+                height: 100%;
+                background-color: #EEEEEE;
+            }
+
+        </style>
+    </head>
+
+    <body onkeypress="game.onKeyPress.call(game, event)">
+        <script type="module" src="js/demos/airshed.js"></script>
+        <script type="module" >
+            import {AirShed} from "./js/demos/airshed.js";
+
+            var game;
+            document.addEventListener("DOMContentLoaded", function() {
+                game = new AirShed(); 
+                window.game = game;
+            });
+        </script>
+        <div id="canvas-frame"></div>
+    </body>
+</html>
