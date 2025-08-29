@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>机库</title>
+        <title>军火库</title>
         <script src="js/public/three/three.js" data-ke-src="public/three/three.js"></script>
         <script src="js/public/three/stats.min.js"></script>
         <script src="js/public/three/TrackballControls.js"></script>
@@ -19,10 +19,30 @@
                 border: none;
                 cursor: pointer;
                 width: 100%;
-                height: 100%;
+                height: 80%;
                 background-color: #EEEEEE;
             }
 
+        </style>
+        <style>
+            #modelOptions {
+                display: block;
+                margin-top: 10px;
+                text-align: center;
+            }
+            #modelOptions label img {
+                border: 2px solid transparent; /* 默认无边框 */
+                border-radius: 5px; /* 可选：圆角边框 */
+                transition: border-color 0.3s; /* 平滑过渡效果 */
+            }
+
+            #modelOptions label input:checked + img {
+                border: 5px solid #007BFF; /* 选中状态的外框颜色 */
+            }
+
+            #modelOptions label img:hover {
+                border-color: #555; /* 鼠标悬停时的边框颜色 */
+            }
         </style>
     </head>
 
@@ -38,5 +58,21 @@
             });
         </script>
         <div id="canvas-frame"></div>
+        <div id="modelOptions" style="display:block; margin-top:10px;">
+        <form id="modelForm">
+            <label>
+                <input type="radio" name="model" value="J15A" checked style="display:none;">
+                <img src="./model/Fighters/J-15A/J-15_diffuse.jpg" alt="J15A" title="J15A" style="width:50px; height:50px; cursor:pointer;">
+            </label>
+            <label>
+                <input type="radio" name="model" value="FC31" style="display:none;">
+                <img src="./model/Fighters/FC-31/FC-31.jpg" alt="FC31" title="FC31" style="width:50px; height:50px; cursor:pointer;">
+            </label>
+            <label>
+                <input type="radio" name="model" value="SU27" style="display:none;">
+                <img src="./model/Fighters/Su-27/Su-27_diffuse.png" alt="SU27" title="SU27" style="width:50px; height:50px; cursor:pointer;">
+            </label>
+        </form>
+    </div>
     </body>
 </html>
