@@ -18,6 +18,9 @@ class ModelLoader {
             case 'SU27':
                 this.loadSu27Model();
                 break;
+            case 'XiLou':
+                this.loadXitaiModel();
+                break;
             default:
                 console.error('Unknown model type:', modelType);
         }
@@ -354,23 +357,23 @@ class ModelLoader {
         // load xilou FBX
         var xilouMaterials = [
             new THREE.MeshPhysicalMaterial({
-                map: this.mTextureLoader.load('./model/Demos/PBR_XiLou/XiLou_m1_C.jpg'), 
-                normalMap: this.mTextureLoader.load('./model/Demos/PBR_XiLou/XiLou_m1_N.jpg'),
-                metalnessMap: this.mTextureLoader.load('./model/Demos/PBR_XiLou/XiLou_m1_Ao.jpg'),
-                specularMap: this.mTextureLoader.load('./model/Demos/PBR_XiLou/XiLou_m1_S.tga')
+                map: new THREE.TextureLoader().load('./model/Demos/PBR_XiLou/XiLou_m1_C.jpg'), 
+                normalMap: new THREE.TextureLoader().load('./model/Demos/PBR_XiLou/XiLou_m1_N.jpg'),
+                metalnessMap: new THREE.TextureLoader().load('./model/Demos/PBR_XiLou/XiLou_m1_Ao.jpg'),
+                specularMap: new THREE.TextureLoader().load('./model/Demos/PBR_XiLou/XiLou_m1_S.png')
             }), 
             new THREE.MeshPhysicalMaterial({
-                map: this.mTextureLoader.load('./model/Demos/PBR_XiLou/XiLou_m3_C.jpg'), 
-                normalMap: this.mTextureLoader.load('./model/Demos/PBR_XiLou/XiLou_m3_N.jpg'),
-                metalnessMap: this.mTextureLoader.load('./model/Demos/PBR_XiLou/XiLou_m3_Ao.jpg'),
-                specularMap: this.mTextureLoader.load('./model/Demos/PBR_XiLou/XiLou_m3_S.tga')
+                map: new THREE.TextureLoader().load('./model/Demos/PBR_XiLou/XiLou_m3_C.jpg'), 
+                normalMap: new THREE.TextureLoader().load('./model/Demos/PBR_XiLou/XiLou_m3_N.jpg'),
+                metalnessMap: new THREE.TextureLoader().load('./model/Demos/PBR_XiLou/XiLou_m3_Ao.jpg'),
+                specularMap: new THREE.TextureLoader().load('./model/Demos/PBR_XiLou/XiLou_m3_S.png')
             }),
             null,
             new THREE.MeshPhysicalMaterial({
-                map: this.mTextureLoader.load('./model/Demos/PBR_XiLou/XiLou_m2_C.jpg'), 
-                normalMap: this.mTextureLoader.load('./model/Demos/PBR_XiLou/XiLou_m2_N.jpg'),
-                metalnessMap: this.mTextureLoader.load('./model/Demos/PBR_XiLou/XiLou_m2_Ao.jpg'),
-                specularMap: this.mTextureLoader.load('./model/Demos/PBR_XiLou/XiLou_m2_S.tga')
+                map: new THREE.TextureLoader().load('./model/Demos/PBR_XiLou/XiLou_m2_C.jpg'), 
+                normalMap: new THREE.TextureLoader().load('./model/Demos/PBR_XiLou/XiLou_m2_N.jpg'),
+                metalnessMap: new THREE.TextureLoader().load('./model/Demos/PBR_XiLou/XiLou_m2_Ao.jpg'),
+                specularMap: new THREE.TextureLoader().load('./model/Demos/PBR_XiLou/XiLou_m2_S.png')
             })
         ];
 

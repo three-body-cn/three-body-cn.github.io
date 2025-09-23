@@ -115,6 +115,18 @@ class Asenal {
         this.mScene.add(this.mSpotLight);
 
         // lens flare
+        // const lensFlareTextures = [
+        //     this.mTextureLoader.load('./texture/lensFlare1/sun.png'),
+        //     this.mTextureLoader.load('./texture/lensFlare1/tex1.png'),
+        //     this.mTextureLoader.load('./texture/lensFlare1/tex2.png'),
+        //     this.mTextureLoader.load('./texture/lensFlare1/tex3.png'),
+        //     this.mTextureLoader.load('./texture/lensFlare1/tex4.png'),
+        //     this.mTextureLoader.load('./texture/lensFlare1/tex5.png'),
+        //     this.mTextureLoader.load('./texture/lensFlare1/tex6.png'),
+        //     this.mTextureLoader.load('./texture/lensFlare1/tex7.png'),
+        //     this.mTextureLoader.load('./texture/lensFlare1/tex8.png'),
+        //     this.mTextureLoader.load('./texture/lensFlare1/tex9.png')
+        // ];
         var lensFlareTex0 = this.mTextureLoader.load("./texture/LensFlare/lensflare0.png");
         var lensFlareTex2 = this.mTextureLoader.load("./texture/LensFlare/lensflare2.png");
         var lensFlareTex3 = this.mTextureLoader.load("./texture/LensFlare/lensflare3.png");
@@ -136,6 +148,22 @@ class Asenal {
         this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTex3, 70, 0.7));
         this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTex3, 120, 0.9));
         this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTex3, 70, 1.0));
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[6], 500, 0.0, flareColor));    // 元素1
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[4], 512, 0.0));   // 元素2
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[2], 512, 0.0));    // 元素3
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[7], 512, 0.0));   // 元素4
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[1], 60, 0.0));   // 元素5
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[3], 70, 0.0));   // 元素6
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[9], 120, 0.0));   // 元素7
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[5], 70, 0.0));   // 元素8
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[1], 0.012, 0.0));  // 元素9
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[7], 0.2, 0.0));    // 元素10
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[9], 0.1, 0.0));    // 元素11
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[3], 0.07, 0.0));   // 元素12
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[5], 0.3, 0.0));    // 元素13
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[4], 0.4, 0.0));    // 元素14
+        // this.mLensFlare.addElement(new THREE.LensflareElement(lensFlareTextures[8], 0.6, 0.0));    // 元素15
+
         this.mLensFlare.position.copy(this.mSpotLight.position);
         // this.mDirectionalLight.add(this.mLensFlare);
         this.mScene.add(this.mLensFlare);
