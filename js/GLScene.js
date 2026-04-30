@@ -3,6 +3,7 @@ var GLScene = function(updateCallback) {
     this.FOV = 45;
     var mScene = this;
     this.mDebug = false;
+    this.mVisible = false;
     this.mMouseView = false;
     this.mRenderer = new THREE.WebGLRenderer({
         antialias : true
@@ -89,6 +90,7 @@ GLScene.prototype.updateStatus = function(visible, debug, mouseView = false) {
     this.mAxis.material.visible = visible;
     this.mMeshLineMaterial.visible = visible;
     this.mDebug = debug;
+    this.mVisible = visible;
     this.mMouseView = mouseView;
 }
 
@@ -143,7 +145,7 @@ GLScene.prototype.onUpdate = function(updateCallback, debug) {
     var minZ = Number.MAX_SAFE_INTEGER;
     for (var i = 0; i < mUniverse.mObjects.length; i++) {
         if (mUniverse.mObjects[i].update != undefined) {
-            mUniverse.mObjects[i].update(this.mDebug);
+            mUniverse.mObjects[i].update(this.mDebug, this.mVisible);
         }
 
         if (mUniverse.mObjects[i].mType != AsterType.STAR) {
@@ -157,29 +159,40 @@ GLScene.prototype.onUpdate = function(updateCallback, debug) {
         minZ = Math.min(minZ, mUniverse.mObjects[i].mMesh.position.z);
     }
 
-    updateCallback(new THREE.Vector3((maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2));
+    var centerX = (maxX + minX) / 2;
+    var centerY = (maxY + minY) / 2;
+    var centerZ = (maxZ + minZ) / 2;
+    updateCallback(new THREE.Vector3(centerX, centerY, centerZ));
     if (!this.mMouseView) {
         var deltaX = Math.abs(maxX - minX);
         var deltaY = Math.abs(maxY - minY);
         var deltaZ = Math.abs(maxZ - minZ);
         var maxDelta = Math.max(deltaX, Math.max(deltaY, deltaZ));
-        var cameraX = (maxX + minX) / 2;
-        var cameraY = (maxY + minY) / 2;
-        var cameraZ = (maxZ + minZ) / 2;
-        this.mCamera.lookAt(cameraX, cameraY, cameraZ);
+        var cameraX = centerX;
+        var cameraY = centerY;
+        var cameraZ = centerZ;
         if (deltaX < deltaY && deltaX < deltaZ) {   // Camera改变x坐标，观察Y-Z平面
             cameraX += (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
-        } 
-        // else if (deltaY < deltaX && deltaY < deltaZ) {   // 观察X-Z平面
-        //     cameraY += (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
-        // } 
-        else {
+        } else {
             cameraZ += (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
         }
 
-        this.mCamera.position.x = cameraX;
-        this.mCamera.position.y = cameraY;
-        this.mCamera.position.z = -cameraZ;
+        var targetPos = new THREE.Vector3(cameraX, cameraY, -cameraZ);
+        var targetLookAt = new THREE.Vector3(centerX, centerY, centerZ);
+
+        // 懒初始化平滑状态
+        if (!this._smoothCamPos) {
+            this._smoothCamPos = targetPos.clone();
+            this._smoothLookAt = targetLookAt.clone();
+        }
+
+        // 每帧向目标插值，平滑相机运动
+        var lerpFactor = 0.04;
+        this._smoothCamPos.lerp(targetPos, lerpFactor);
+        this._smoothLookAt.lerp(targetLookAt, lerpFactor);
+
+        this.mCamera.position.copy(this._smoothCamPos);
+        this.mCamera.lookAt(this._smoothLookAt);
     }
 
     mUniverse.mUniverseTime++;

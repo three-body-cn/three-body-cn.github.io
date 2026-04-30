@@ -300,7 +300,7 @@ Aster.prototype.showTrack = function() {
     }
 }
 
-Aster.prototype.update = function(debug) {
+Aster.prototype.update = function(debug, showAssist) {
     this.gravityForce(mUniverse.mObjects, debug);
     if (undefined != this.mPointLight)
         this.mPointLight.position.copy(this.mMesh.position);
@@ -326,6 +326,7 @@ Aster.prototype.update = function(debug) {
         }
     }
     this.showTrack();
+    this.mTrackLine.visible = !!showAssist;
 }
 
 /**
