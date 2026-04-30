@@ -24,6 +24,7 @@ function onKeyPress(event) {
         case 'g':
             mShowAssist = !mShowAssist;
             if (null != mGLScene) {
+                mGLScene.updateStatus(mShowAssist, mPrintLog);
                 if (mShowAssist) {
                     mGLView.appendChild(mGLScene.mStats.domElement);
                 } else {

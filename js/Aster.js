@@ -233,8 +233,14 @@ function Aster(scene, config, endCallback) {
         this.mMesh.add(this.mSunCorona);
     }
 
-    // assist
-    this.mTrack = new THREE.Geometry();
+    // assist — use BufferGeometry directly to avoid Three.js r97's broken
+    // Geometry→BufferGeometry conversion path for Line objects
+    this.mTrackMax = 101;
+    this.mTrackCount = 0;
+    this.mTrack = new THREE.BufferGeometry();
+    this.mTrack.addAttribute('position',
+        new THREE.BufferAttribute(new Float32Array(this.mTrackMax * 3), 3));
+    this.mTrack.setDrawRange(0, 0);
     this.mTrackLineMaterial = new THREE.LineBasicMaterial({color: config.trackColor, linewidth: 5});
     this.mTrackLine = new THREE.Line(this.mTrack, this.mTrackLineMaterial);
 }
@@ -270,11 +276,24 @@ Aster.prototype.logVector3 = function(vector) {
 }
 
 Aster.prototype.showTrack = function() {
-    if (this.mTrack.vertices.length > 100) {
-        this.mTrack.vertices.pop(); // 尾部删除
+    var pos = this.mMesh.position;
+    var arr = this.mTrack.attributes.position.array;
+    var end = Math.min(this.mTrackCount, this.mTrackMax - 1);
+
+    // Shift existing positions back by one slot
+    for (var i = end; i > 0; i--) {
+        arr[i * 3]     = arr[(i - 1) * 3];
+        arr[i * 3 + 1] = arr[(i - 1) * 3 + 1];
+        arr[i * 3 + 2] = arr[(i - 1) * 3 + 2];
     }
-    this.mTrack.vertices.unshift(this.mMesh.position.clone());  // THREE.Vector3,头部添加
-    this.mTrack.verticesNeedUpdate = true;
+    arr[0] = pos.x;
+    arr[1] = pos.y;
+    arr[2] = pos.z;
+
+    if (this.mTrackCount < this.mTrackMax) this.mTrackCount++;
+    this.mTrack.attributes.position.needsUpdate = true;
+    this.mTrack.setDrawRange(0, this.mTrackCount);
+
     if (!this.mFirst) {
         this.mScene.addElement(this.mTrackLine);
         this.mFirst = true;
