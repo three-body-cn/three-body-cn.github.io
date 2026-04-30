@@ -2,6 +2,7 @@ Physijs.scripts.worker = './js/public/three/physijs_worker.js';
 Physijs.scripts.ammo = 'ammo.js';
 
 var mCivilizationNum = 0;
+var mStartTime = 0;
 var mUniverse;
 var mOrbitControls;
 var mGLScene;
@@ -11,6 +12,30 @@ var mShowAssist = false;
 var mPrintLog = false;
 var mGLView = null;
 var mTimeOut = null;
+
+var LEVEL_NAMES = ['原始时代', '石器时代', '冷兵器时代', '帝国时代', '火器时代', '蒸汽时代', '电气时代', '原子信息时代'];
+
+function getCivilizationYear() {
+    return Math.floor((Date.now() - mStartTime) / 1000);
+}
+
+function getCivilizationLevel(year) {
+    return LEVEL_NAMES[Math.min(7, Math.floor(year / 1000))];
+}
+
+// 对星体初始参数加入随机扰动，维持三体引力束缚
+// 位置 ±50（约间距的12%），速度 ±15（约速度的10%），远低于逃逸速度 ~258
+function randomizeConfig(configData) {
+    var result = JSON.parse(JSON.stringify(configData));
+    function rand(range) { return (Math.random() - 0.5) * 2 * range; }
+    for (var i = 0; i < result.asters.length; i++) {
+        var a = result.asters[i];
+        if (a.type !== 0) continue;
+        a.pos.x += rand(50); a.pos.y += rand(50); a.pos.z += rand(50);
+        a.initVelocity.x += rand(15); a.initVelocity.y += rand(15); a.initVelocity.z += rand(15);
+    }
+    return result;
+}
 
 function onKeyPress(event) {
     var key;
@@ -100,19 +125,19 @@ function recoverMouseViewStatus() {
     mGLScene.updateStatus(mShowAssist, mPrintLog, false);
 }
 
-function disasterHappened(disasterType) {
+function disasterHappened(disasterType, id, year, level) {
     if (disasterType == DisasterType.STAR_COLLISION) {
-        alertDialog('第$号文明毁灭于双日相撞，该文明持续了$年，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续在三体世界中命运莫测的进化。', 10000, restartUniverse);
+        alertDialog('第' + id + '号文明毁灭于双日相撞，该文明持续了' + year + '年，该文明进化至' + level + '。<br/>文明的种子仍在，它将重新启动，继续在三体世界中命运莫测的进化。', 10000, restartUniverse);
     } else if (disasterType == DisasterType.STAR_EAT_EARTH) {
-        alertDialog('第$号文明在烈焰中被毁灭了，该文明持续了$年，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续在三体世界中命运莫测的进化。', 10000, restartUniverse);
+        alertDialog('第' + id + '号文明在烈焰中被毁灭了，该文明持续了' + year + '年，该文明进化至' + level + '。<br/>文明的种子仍在，它将重新启动，继续在三体世界中命运莫测的进化。', 10000, restartUniverse);
     } else if (disasterType == DisasterType.THREE_SOLAR_FAR_AWAY) {
-        alertDialog('这一夜持续了$年，第$号文明毁灭于漫长的严寒岁月，该文明进化至。<br/>文明的种子仍在，它将重新启动，继续在三体世界中命运莫测的进化。', 10000, restartUniverse);
+        alertDialog('这一夜持续了' + year + '年，第' + id + '号文明毁灭于漫长的严寒岁月，该文明进化至' + level + '。<br/>文明的种子仍在，它将重新启动，继续在三体世界中命运莫测的进化。', 10000, restartUniverse);
     }
 }
 
 function restartUniverse() {
-    // random
-
+    sessionStorage.setItem('civilizationId', mCivilizationNum + 1);
+    location.reload();
 }
 
 function main() {
@@ -132,6 +157,9 @@ function main() {
     // onSurfaceChanged
     window.addEventListener('resize', onWindowResize, false);
 
+    mCivilizationNum = parseInt(sessionStorage.getItem('civilizationId') || '1');
+    mStartTime = Date.now();
+
     mDataLoader.loadSimData('three-solar-system.json', function(data) {
         mSimData = JSON.stringify(data, null, "\t")
     });
@@ -150,11 +178,13 @@ function main() {
             function(scene) {
                 mGLScene = scene;
                 createUIController(scene);
-            }, 
-            function(disasterType) {
-                disasterHappened(disasterType);
             },
-            JSON.parse(mSimData))
+            function(disasterType) {
+                var year = getCivilizationYear();
+                var level = getCivilizationLevel(year);
+                disasterHappened(disasterType, mCivilizationNum, year, level);
+            },
+            randomizeConfig(JSON.parse(mSimData)))
     } catch (e) {
         alert('illegal data:' + e);
     }
