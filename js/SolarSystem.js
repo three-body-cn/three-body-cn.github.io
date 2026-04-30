@@ -13,6 +13,9 @@ var mMeshLineMaterial;
 var mSunLight;
 // stars
 var mSun;
+var mSunGroup;
+var mSunClouds = [];
+var mFlareGroup;
 var mPlanets = [];
 var mMercury;
 var mVenus;
@@ -235,6 +238,33 @@ function initLight() {
     mSolarSystem.add(mPointLight);
 }
 
+// Returns an Object3D containing a solar flare plane (base + emissive) oriented radially outward.
+// The plane bottom edge sits at sunRadius; it extends outward by fh along the radial direction.
+function createSunFlare(baseTex, emissTex, sunRadius, theta, phi, fw, fh) {
+    var rdx = Math.cos(phi) * Math.sin(theta);
+    var rdy = Math.sin(phi);
+    var rdz = Math.cos(phi) * Math.cos(theta);
+    var radialDir = new THREE.Vector3(rdx, rdy, rdz).normalize();
+    var quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), radialDir);
+    var pos = radialDir.clone().multiplyScalar(sunRadius + fh * 0.5);
+    var geo = new THREE.PlaneGeometry(fw, fh);
+
+    var makeFlare = function(tex, opacity) {
+        var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+            map: tex, transparent: true, side: THREE.DoubleSide,
+            blending: THREE.AdditiveBlending, depthWrite: false, opacity: opacity
+        }));
+        m.position.copy(pos);
+        m.quaternion.copy(quat);
+        return m;
+    };
+
+    var group = new THREE.Object3D();
+    group.add(makeFlare(baseTex, 0.9));
+    group.add(makeFlare(emissTex, 0.7));
+    return group;
+}
+
 function initObjects() {
     mMeshLineMaterial = new THREE.LineBasicMaterial({color: 0xffffff, opacity: 0.2});
     mMeshLineMaterial.visible = mShowAssist;
@@ -252,17 +282,109 @@ function initObjects() {
         mSolarSystem.add(line);
     }
 
-    // 添加太阳发光效果
-    mSunLight = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(generateSprite("255, 255, 255")),
-        blending: THREE.AdditiveBlending}));
-    mSunLight.scale.x = mSunLight.scale.y = mSunLight.scale.z = 30;
+    // outer glow sprite — orange tint to match solar color
+    mSunLight = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: new THREE.CanvasTexture(generateSprite("255, 140, 30")),
+        blending: THREE.AdditiveBlending
+    }));
+    mSunLight.scale.set(50, 50, 50);
     mSolarSystem.add(mSunLight);
-    // sun
-    var sunGeo = new THREE.SphereGeometry(7 ,32, 32);
-    var sunTex = THREE.ImageUtils.loadTexture("model/Solar/Sol_Opaque_Mat_baseColor.png",null,function(t){});
-    var sunMat = new THREE.MeshLambertMaterial({map: sunTex, emissive: 0x888833});
-    mSun = new THREE.Mesh(sunGeo, sunMat);
-    mSolarSystem.add(mSun);
+
+    // ── Sun — three-layer reconstruction from Sol.gltf textures ──────────
+    var texLoader = new THREE.TextureLoader();
+    var SUN_R = 7;
+    mSunGroup = new THREE.Object3D();
+
+    // 1. Opaque body (Sol_Opaque_Mat, KHR_materials_unlit → MeshBasicMaterial)
+    //    Base-color sphere + emissive overlay with additive blending
+    mSun = new THREE.Object3D();
+    mSun.add(new THREE.Mesh(
+        new THREE.SphereGeometry(SUN_R, 64, 64),
+        new THREE.MeshBasicMaterial({
+            map: texLoader.load("model/Solar/Sol_Opaque_Mat_baseColor.png")
+        })
+    ));
+    mSun.add(new THREE.Mesh(
+        new THREE.SphereGeometry(SUN_R + 0.1, 64, 64),
+        new THREE.MeshBasicMaterial({
+            map: texLoader.load("model/Solar/Sol_Opaque_Mat_emissive.png"),
+            transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+        })
+    ));
+    mSunGroup.add(mSun);
+
+    // 2. Transparent corona / cloud layers (Sol_Transparent_Mat, alphaMode BLEND)
+    //    Four concentric spheres rotating on different axes at different speeds
+    var cloudBaseTex  = texLoader.load("model/Solar/Sol_Transparent_Mat_baseColor.png");
+    var cloudEmissTex = texLoader.load("model/Solar/Sol_Transparent_Mat_emissive.png");
+    mSunClouds = [];
+    var cloudDefs = [
+        { r: SUN_R * 1.03, speed:  0.0009, axis: new THREE.Vector3(0, 1, 0) },
+        { r: SUN_R * 1.07, speed: -0.0006, axis: new THREE.Vector3(1, 0.2, 0.3).normalize() },
+        { r: SUN_R * 1.12, speed:  0.0005, axis: new THREE.Vector3(0.3, 0, 1).normalize() },
+        { r: SUN_R * 1.18, speed: -0.0003, axis: new THREE.Vector3(0.1, 1, 0.4).normalize() }
+    ];
+    for (var ci = 0; ci < cloudDefs.length; ci++) {
+        var cd = cloudDefs[ci];
+        var layer = new THREE.Object3D();
+        layer.userData.axis = cd.axis;
+        layer.userData.speed = cd.speed;
+        layer.add(new THREE.Mesh(
+            new THREE.SphereGeometry(cd.r, 48, 48),
+            new THREE.MeshBasicMaterial({
+                map: cloudBaseTex, transparent: true,
+                blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.45
+            })
+        ));
+        layer.add(new THREE.Mesh(
+            new THREE.SphereGeometry(cd.r + 0.1, 48, 48),
+            new THREE.MeshBasicMaterial({
+                map: cloudEmissTex, transparent: true,
+                blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.30
+            })
+        ));
+        mSunGroup.add(layer);
+        mSunClouds.push(layer);
+    }
+
+    // 3. Solar flares (SolarFlare_Transparent_Mat, alphaMode BLEND)
+    //    PlaneGeometry panels oriented radially: arcs, bursts and loops
+    var flareTex  = texLoader.load("model/Solar/SolarFlare_Transparent_Mat_baseColor.png");
+    var flareEmis = texLoader.load("model/Solar/SolarFlare_Transparent_Mat_emissive.png");
+    mFlareGroup = new THREE.Object3D();
+    var fDefs = [
+        // Arcs (narrow, tall) — [theta, phi, width, height]
+        [0.00,  0.10, SUN_R*0.28, SUN_R*0.85],
+        [0.63,  0.40, SUN_R*0.22, SUN_R*0.70],
+        [1.26, -0.20, SUN_R*0.32, SUN_R*0.90],
+        [1.88,  0.55, SUN_R*0.18, SUN_R*0.65],
+        [2.51, -0.35, SUN_R*0.26, SUN_R*0.80],
+        [3.14,  0.15, SUN_R*0.24, SUN_R*0.75],
+        [3.77, -0.45, SUN_R*0.30, SUN_R*0.88],
+        [4.40,  0.30, SUN_R*0.20, SUN_R*0.72],
+        [5.03, -0.10, SUN_R*0.28, SUN_R*0.82],
+        [5.65,  0.50, SUN_R*0.22, SUN_R*0.68],
+        // Bursts (wider, shorter)
+        [0.30, -0.65, SUN_R*0.50, SUN_R*0.60],
+        [1.10,  0.70, SUN_R*0.55, SUN_R*0.65],
+        [2.00, -0.55, SUN_R*0.45, SUN_R*0.58],
+        [2.80,  0.75, SUN_R*0.60, SUN_R*0.62],
+        [3.60, -0.60, SUN_R*0.50, SUN_R*0.60],
+        [4.50,  0.65, SUN_R*0.55, SUN_R*0.63],
+        [5.20, -0.70, SUN_R*0.45, SUN_R*0.58],
+        // Loops (medium width and height)
+        [0.60,  0.82, SUN_R*0.40, SUN_R*0.72],
+        [1.50, -0.78, SUN_R*0.38, SUN_R*0.70],
+        [2.40,  0.80, SUN_R*0.42, SUN_R*0.75],
+        [3.30, -0.72, SUN_R*0.36, SUN_R*0.68],
+        [4.20,  0.76, SUN_R*0.40, SUN_R*0.73]
+    ];
+    for (var fi = 0; fi < fDefs.length; fi++) {
+        mFlareGroup.add(createSunFlare(flareTex, flareEmis, SUN_R,
+            fDefs[fi][0], fDefs[fi][1], fDefs[fi][2], fDefs[fi][3]));
+    }
+    mSunGroup.add(mFlareGroup);
+    mSolarSystem.add(mSunGroup);
     // revolution pivot
     var revolutionPivot = new THREE.Object3D();
     // mercury
@@ -344,6 +466,11 @@ function updateScene() {
         mPlanets[i].planet.rotation.y -= mPlanets[i].rotation.y;
     }
     mSun.rotation.y -= 0.004;   // 太阳自转速度
+    for (var ci = 0; ci < mSunClouds.length; ci++) {
+        mSunClouds[ci].rotateOnAxis(mSunClouds[ci].userData.axis, mSunClouds[ci].userData.speed);
+    }
+    mFlareGroup.rotation.y += 0.0015;
+    mFlareGroup.rotation.x += 0.0003;
 }
 
 function main() {
