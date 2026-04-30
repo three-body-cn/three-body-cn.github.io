@@ -14,8 +14,10 @@ var mSunLight;
 // stars
 var mSun;
 var mSunGroup;
-var mSunClouds = [];
-var mFlareGroup;
+/** 太阳日冕：Group，内含内层细丝 + 外层光晕两层 Mesh，updateScene 里统一刷 time */
+var mSunCorona;
+var mSunSurfaceMaterial;
+var mClock;
 var mPlanets = [];
 var mMercury;
 var mVenus;
@@ -59,9 +61,11 @@ function onKeyPress(event) {
 }
 
 /**
- * 实现球体发光
- * @param color 颜色的r,g和b值,比如："123,123,123";
- * @returns {Element} 返回canvas对象
+ * 生成径向渐变 Canvas，用作 Sprite 的纹理。
+ * Sprite 始终朝向相机，适合模拟“光晕光斑”；与球壳日冕叠加时应用加性混合，并关闭 depthWrite 避免错误遮挡。
+ *
+ * @param color 颜色分量字符串，如 "255, 210, 140"
+ * @returns {HTMLCanvasElement} 供 THREE.CanvasTexture 使用
  */
 var generateSprite = function (color) {
     var canvas = document.createElement('canvas');
@@ -77,6 +81,243 @@ var generateSprite = function (color) {
     context.fillStyle = gradient;
     context.fillRect(0, 0, canvas.width, canvas.height);
     return canvas;
+}
+
+/**
+ * 创建太阳：实心表面 + 两层日冕（内层日珥细丝、外层扩散晕）。
+ *
+ * 之前单壳 DoubleSide + 片元里用固定 Z 轴算“边缘”+ 全表面噪声，容易叠成均匀的半透明球壳。
+ * 这里改为：
+ * - 用视空间视线与法线的夹角算 Fresnel 边缘项（正对相机几乎为 0，只有轮廓亮）；
+ * - 噪声只乘在边缘项上，中心不再叠半透明层；
+ * - 顶点沿法线轻微位移，打破完美同心圆；
+ * - 内/外两层球壳半径不同：外层轮廓比光球大，光从边缘“溢出去”，而不是贴在同一半径上；
+ * - Three.js 非预乘 alpha 下 AdditiveBlending 为 blendFunc(SRC_ALPHA, ONE)，
+ *   即 final += srcRGB * srcAlpha，因此 RGB 写亮度、alpha 写贡献强度即可。
+ */
+function createSun(scene) {
+    var SUN_RADIUS = 7;
+
+    // -------------------------------------------------------------------------
+    // 太阳表面：贴图 + UV 扰动（翻滚感），与 Sceneform 里“有纹理的发光球”一致思路
+    // -------------------------------------------------------------------------
+    var sunTex = THREE.ImageUtils.loadTexture("model/Solar/Sol_Opaque_Mat_baseColor.png", null, function(t){});
+    sunTex.wrapS = sunTex.wrapT = THREE.RepeatWrapping;
+
+    var sunSurfaceVS = [
+        "// 太阳表面顶点：输出 UV 与视空间法线，供片元做边缘提亮",
+        "varying vec2 vUv;",
+        "varying vec3 vNormal;",
+        "void main() {",
+        "  vUv = uv;",
+        "  vNormal = normalize(normalMatrix * normal);",
+        "  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);",
+        "}"
+    ].join("\n");
+
+    var sunSurfaceFS = [
+        "uniform float time;",
+        "uniform sampler2D map;",
+        "uniform vec3 color;",
+        "uniform float emissiveStrength;",
+        "uniform float distortionStrength;",
+        "varying vec2 vUv;",
+        "varying vec3 vNormal;",
+
+        "// ---- 2D 值噪声 + 分形叠加（fbm），用于 UV 扭曲与温度细节 ----",
+        "float hash(vec2 p){",
+        "  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);",
+        "}",
+        "float noise(vec2 p){",
+        "  vec2 i = floor(p);",
+        "  vec2 f = fract(p);",
+        "  float a = hash(i);",
+        "  float b = hash(i + vec2(1.0, 0.0));",
+        "  float c = hash(i + vec2(0.0, 1.0));",
+        "  float d = hash(i + vec2(1.0, 1.0));",
+        "  vec2 u = f * f * (3.0 - 2.0 * f);",
+        "  return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;",
+        "}",
+        "float fbm(vec2 p){",
+        "  float v = 0.0;",
+        "  float a = 0.5;",
+        "  mat2 m = mat2(1.6, -1.2, 1.2, 1.6);",
+        "  for(int i=0;i<4;i++){",
+        "    v += a * noise(p);",
+        "    p = m * p;",
+        "    a *= 0.5;",
+        "  }",
+        "  return v;",
+        "}",
+
+        "void main(){",
+        "  // 用 fbm 偏移 UV，让贴图呈等离子翻滚（非物理，但观感接近动态光球）",
+        "  vec2 p = vUv * 6.0;",
+        "  float n1 = fbm(p + vec2(time * 0.25, -time * 0.18));",
+        "  float n2 = fbm(p * 1.8 + vec2(-time * 0.12, time * 0.22));",
+        "  vec2 duv = vec2(n1 - 0.5, n2 - 0.5) * distortionStrength;",
+        "  vec2 uv = vUv + duv;",
+
+        "  vec3 base = texture2D(map, uv).rgb;",
+        "  float hot = smoothstep(0.35, 0.95, n1);",
+        "  vec3 ramp = mix(vec3(1.0, 0.55, 0.08), vec3(1.0, 0.92, 0.55), hot);",
+        "  vec3 c = base * 0.65 + ramp * 0.65;",
+
+        "  // 注意：这里若再用固定 Z 轴算边缘会随相机绕转而失真；表面层用简单 rim 即可",
+        "  vec3 viewN = normalize(vNormal);",
+        "  float ndv = clamp(dot(viewN, vec3(0.0, 0.0, 1.0)) * 0.5 + 0.5, 0.0, 1.0);",
+        "  float glow = pow(1.0 - ndv, 2.0);",
+        "  c += glow * vec3(1.0, 0.65, 0.2) * 0.35;",
+
+        "  c *= emissiveStrength;",
+        "  gl_FragColor = vec4(c, 1.0);",
+        "}"
+    ].join("\n");
+
+    mSunSurfaceMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            time: { value: 0.0 },
+            map: { value: sunTex },
+            color: { value: new THREE.Color(0xffcc66) },
+            emissiveStrength: { value: 1.35 },
+            distortionStrength: { value: 0.035 }
+        },
+        vertexShader: sunSurfaceVS,
+        fragmentShader: sunSurfaceFS
+    });
+
+    var sunGeo = new THREE.SphereGeometry(SUN_RADIUS, 64, 64);
+    var sunMesh = new THREE.Mesh(sunGeo, mSunSurfaceMaterial);
+    sunMesh.renderOrder = 0;
+
+    // -------------------------------------------------------------------------
+    // 日冕：共用一套着色器，通过 uniform 区分内层（亮、细、贴轮廓）与外层（淡、大半径）
+    // -------------------------------------------------------------------------
+    var coronaVS = [
+        "// 日冕顶点：输出视空间位置（算真实视线方向）、法线、模型空间球心方向（做球面火焰 UV）",
+        "uniform float time;",
+        "uniform float displacementScale;",
+        "varying vec3 vNormal;",
+        "varying vec3 vViewPos;",
+        "varying vec3 vModelDir;",
+        "void main(){",
+        "  vModelDir = normalize(position);",
+        "  vNormal = normalize(normalMatrix * normal);",
+        "  // 沿法线低频起伏：破坏“完美玻璃球壳”的均匀感，轮廓会有轻微抖动",
+        "  vec3 pos = position;",
+        "  float bump = sin(pos.x * 4.2 + time * 1.35) * cos(pos.y * 3.7 - time * 0.95) * cos(pos.z * 3.1 + time * 1.05);",
+        "  pos = pos + normal * (0.14 * bump * displacementScale);",
+        "  vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);",
+        "  vViewPos = mvPosition.xyz;",
+        "  gl_Position = projectionMatrix * mvPosition;",
+        "}"
+    ].join("\n");
+
+    var coronaFS = [
+        "// 日冕片元：加性混合下 alpha 为“叠加强度”，RGB 为光色",
+        "uniform float time;",
+        "uniform vec3 color;",
+        "uniform float intensity;",
+        "uniform float rimPower;",
+        "uniform float flameScale;",
+        "varying vec3 vNormal;",
+        "varying vec3 vViewPos;",
+        "varying vec3 vModelDir;",
+
+        "float hash(vec2 p){ return fract(sin(dot(p, vec2(41.7, 289.3))) * 43758.5453); }",
+        "float noise(vec2 p){",
+        "  vec2 i = floor(p), f = fract(p);",
+        "  float a = hash(i);",
+        "  float b = hash(i + vec2(1.0,0.0));",
+        "  float c = hash(i + vec2(0.0,1.0));",
+        "  float d = hash(i + vec2(1.0,1.0));",
+        "  vec2 u = f*f*(3.0-2.0*f);",
+        "  return mix(a,b,u.x) + (c-a)*u.y*(1.0-u.x) + (d-b)*u.x*u.y;",
+        "}",
+        "float fbm(vec2 p){",
+        "  float v=0.0,a=0.5;",
+        "  for(int i=0;i<5;i++){ v += a*noise(p); p*=2.02; a*=0.5; }",
+        "  return v;",
+        "}",
+
+        "void main(){",
+        "  // 视空间：相机在原点，表面指向相机的方向 viewDir；法线 vNormal 已乘 normalMatrix",
+        "  vec3 viewDir = normalize(-vViewPos);",
+        "  float NdotV = clamp(dot(normalize(vNormal), viewDir), 0.001, 1.0);",
+        "  // rim：掠射角大（N·V 小）→ 亮；正对相机（N·V≈1）→ 接近 0，避免整球蒙一层",
+        "  float rim = pow(1.0 - NdotV, rimPower);",
+
+        "  // 用球面方向 (方位角、极角) 采样噪声，并沿时间流动，模拟日冕细丝/火焰",
+        "  vec3 r = normalize(vModelDir);",
+        "  float phi = atan(r.z, r.x);",
+        "  float theta = acos(clamp(r.y, -1.0, 1.0));",
+        "  vec2 uv = vec2(phi, theta) * flameScale * vec2(3.0, 5.5);",
+        "  uv += vec2(time * 0.55, -time * 1.25);",
+        "  float f1 = fbm(uv);",
+        "  float f2 = fbm(uv * 2.6 + vec2(-time * 0.35, time * 0.65));",
+        "  float flame = clamp(f1 * 0.62 + f2 * 0.48, 0.0, 1.0);",
+        "  flame = pow(flame, 0.82);",
+
+        "  // 关键：所有半透明贡献都必须再乘 rim，噪声不得单独加 alpha（否则会像套一层雾）",
+        "  float flicker = 0.88 + 0.12 * sin(time * 2.1 + phi * 3.0);",
+        "  float alpha = rim * (0.12 + 0.92 * flame) * flicker * intensity;",
+        "  vec3 hot = mix(color, vec3(1.0, 0.92, 0.55), flame * 0.55);",
+        "  vec3 rgb = hot * (0.45 + 0.85 * flame + 0.35 * rim);",
+
+        "  gl_FragColor = vec4(rgb, clamp(alpha, 0.0, 1.0));",
+        "}"
+    ].join("\n");
+
+    function makeCoronaMesh(radius, uniforms, renderOrder) {
+        var mat = new THREE.ShaderMaterial({
+            uniforms: uniforms,
+            vertexShader: coronaVS,
+            fragmentShader: coronaFS,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            depthTest: true,
+            // 只画正面：避免 DoubleSide 时背面再叠一层，加重“肥皂泡”感
+            side: THREE.FrontSide,
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+            polygonOffsetUnits: -1
+        });
+        var mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 64, 64), mat);
+        mesh.renderOrder = renderOrder;
+        return mesh;
+    }
+
+    var coronaInner = makeCoronaMesh(SUN_RADIUS * 1.05, {
+        time: { value: 0.0 },
+        color: { value: new THREE.Color(0xff9933) },
+        intensity: { value: 1.15 },
+        rimPower: { value: 5.2 },
+        flameScale: { value: 1.05 },
+        displacementScale: { value: 1.0 }
+    }, 1);
+
+    var coronaOuter = makeCoronaMesh(SUN_RADIUS * 1.28, {
+        time: { value: 0.0 },
+        color: { value: new THREE.Color(0xffcc66) },
+        intensity: { value: 0.42 },
+        rimPower: { value: 4.0 },
+        flameScale: { value: 0.72 },
+        displacementScale: { value: 0.65 }
+    }, 2);
+
+    mSunCorona = new THREE.Group();
+    mSunCorona.add(coronaInner);
+    mSunCorona.add(coronaOuter);
+
+    // 日冕挂在光球下，随 mSun 自转，火焰纹理与球面一起转，更整体
+    sunMesh.add(mSunCorona);
+
+    mSunGroup = new THREE.Group();
+    mSunGroup.add(sunMesh);
+    scene.add(mSunGroup);
+
+    mSun = sunMesh;
 }
 
 function getNumberInNormalDistribution(mean, std_dev){
@@ -183,6 +424,9 @@ function initThree() {
     mRenderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('canvas-frame').appendChild(mRenderer.domElement);
     mRenderer.setClearColor(0x000000, 1.0);
+    // Slightly nicer highlights on older three builds (safe no-op on newer)
+    mRenderer.gammaInput = true;
+    mRenderer.gammaOutput = true;
 
     mStats = new Stats();
     mStats.domElement.style.position = 'absolute';
@@ -233,36 +477,11 @@ function initScene() {
 function initLight() {
     mAmbientLight = new THREE.AmbientLight(0x777777);
     mSolarSystem.add(mAmbientLight);
-    mPointLight = new THREE.PointLight(0xffffff, 1, 1000, 0.2);
+    // Warm sunlight with gentle decay
+    mPointLight = new THREE.PointLight(0xfff1cc, 1.35, 1500, 0.2);
     mPointLight.castShadow = true;
+    mPointLight.position.set(0, 0, 0);
     mSolarSystem.add(mPointLight);
-}
-
-// Returns an Object3D containing a solar flare plane (base + emissive) oriented radially outward.
-// The plane bottom edge sits at sunRadius; it extends outward by fh along the radial direction.
-function createSunFlare(baseTex, emissTex, sunRadius, theta, phi, fw, fh) {
-    var rdx = Math.cos(phi) * Math.sin(theta);
-    var rdy = Math.sin(phi);
-    var rdz = Math.cos(phi) * Math.cos(theta);
-    var radialDir = new THREE.Vector3(rdx, rdy, rdz).normalize();
-    var quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), radialDir);
-    var pos = radialDir.clone().multiplyScalar(sunRadius + fh * 0.5);
-    var geo = new THREE.PlaneGeometry(fw, fh);
-
-    var makeFlare = function(tex, opacity) {
-        var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
-            map: tex, transparent: true, side: THREE.DoubleSide,
-            blending: THREE.AdditiveBlending, depthWrite: false, opacity: opacity
-        }));
-        m.position.copy(pos);
-        m.quaternion.copy(quat);
-        return m;
-    };
-
-    var group = new THREE.Object3D();
-    group.add(makeFlare(baseTex, 0.9));
-    group.add(makeFlare(emissTex, 0.7));
-    return group;
 }
 
 function initObjects() {
@@ -282,109 +501,18 @@ function initObjects() {
         mSolarSystem.add(line);
     }
 
-    // outer glow sprite — orange tint to match solar color
+    // 太阳：Shader 光球 + 两层日冕（逻辑在 createSun 内，含详细着色器注释）
+    createSun(mSolarSystem);
+
+    // 额外 Sprite 光晕：弥补远处观看时日冕在屏幕上像素占比变小、整体偏暗的问题（Billboard + 加性混合）
     mSunLight = new THREE.Sprite(new THREE.SpriteMaterial({
-        map: new THREE.CanvasTexture(generateSprite("255, 140, 30")),
-        blending: THREE.AdditiveBlending
+        map: new THREE.CanvasTexture(generateSprite("255, 210, 140")),
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        depthWrite: false
     }));
-    mSunLight.scale.set(50, 50, 50);
+    mSunLight.scale.x = mSunLight.scale.y = mSunLight.scale.z = 38;
     mSolarSystem.add(mSunLight);
-
-    // ── Sun — three-layer reconstruction from Sol.gltf textures ──────────
-    var texLoader = new THREE.TextureLoader();
-    var SUN_R = 7;
-    mSunGroup = new THREE.Object3D();
-
-    // 1. Opaque body (Sol_Opaque_Mat, KHR_materials_unlit → MeshBasicMaterial)
-    //    Base-color sphere + emissive overlay with additive blending
-    mSun = new THREE.Object3D();
-    mSun.add(new THREE.Mesh(
-        new THREE.SphereGeometry(SUN_R, 64, 64),
-        new THREE.MeshBasicMaterial({
-            map: texLoader.load("model/Solar/Sol_Opaque_Mat_baseColor.png")
-        })
-    ));
-    mSun.add(new THREE.Mesh(
-        new THREE.SphereGeometry(SUN_R + 0.1, 64, 64),
-        new THREE.MeshBasicMaterial({
-            map: texLoader.load("model/Solar/Sol_Opaque_Mat_emissive.png"),
-            transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
-        })
-    ));
-    mSunGroup.add(mSun);
-
-    // 2. Transparent corona / cloud layers (Sol_Transparent_Mat, alphaMode BLEND)
-    //    Four concentric spheres rotating on different axes at different speeds
-    var cloudBaseTex  = texLoader.load("model/Solar/Sol_Transparent_Mat_baseColor.png");
-    var cloudEmissTex = texLoader.load("model/Solar/Sol_Transparent_Mat_emissive.png");
-    mSunClouds = [];
-    var cloudDefs = [
-        { r: SUN_R * 1.03, speed:  0.0009, axis: new THREE.Vector3(0, 1, 0) },
-        { r: SUN_R * 1.07, speed: -0.0006, axis: new THREE.Vector3(1, 0.2, 0.3).normalize() },
-        { r: SUN_R * 1.12, speed:  0.0005, axis: new THREE.Vector3(0.3, 0, 1).normalize() },
-        { r: SUN_R * 1.18, speed: -0.0003, axis: new THREE.Vector3(0.1, 1, 0.4).normalize() }
-    ];
-    for (var ci = 0; ci < cloudDefs.length; ci++) {
-        var cd = cloudDefs[ci];
-        var layer = new THREE.Object3D();
-        layer.userData.axis = cd.axis;
-        layer.userData.speed = cd.speed;
-        layer.add(new THREE.Mesh(
-            new THREE.SphereGeometry(cd.r, 48, 48),
-            new THREE.MeshBasicMaterial({
-                map: cloudBaseTex, transparent: true,
-                blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.45
-            })
-        ));
-        layer.add(new THREE.Mesh(
-            new THREE.SphereGeometry(cd.r + 0.1, 48, 48),
-            new THREE.MeshBasicMaterial({
-                map: cloudEmissTex, transparent: true,
-                blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.30
-            })
-        ));
-        mSunGroup.add(layer);
-        mSunClouds.push(layer);
-    }
-
-    // 3. Solar flares (SolarFlare_Transparent_Mat, alphaMode BLEND)
-    //    PlaneGeometry panels oriented radially: arcs, bursts and loops
-    var flareTex  = texLoader.load("model/Solar/SolarFlare_Transparent_Mat_baseColor.png");
-    var flareEmis = texLoader.load("model/Solar/SolarFlare_Transparent_Mat_emissive.png");
-    mFlareGroup = new THREE.Object3D();
-    var fDefs = [
-        // Arcs (narrow, tall) — [theta, phi, width, height]
-        [0.00,  0.10, SUN_R*0.28, SUN_R*0.85],
-        [0.63,  0.40, SUN_R*0.22, SUN_R*0.70],
-        [1.26, -0.20, SUN_R*0.32, SUN_R*0.90],
-        [1.88,  0.55, SUN_R*0.18, SUN_R*0.65],
-        [2.51, -0.35, SUN_R*0.26, SUN_R*0.80],
-        [3.14,  0.15, SUN_R*0.24, SUN_R*0.75],
-        [3.77, -0.45, SUN_R*0.30, SUN_R*0.88],
-        [4.40,  0.30, SUN_R*0.20, SUN_R*0.72],
-        [5.03, -0.10, SUN_R*0.28, SUN_R*0.82],
-        [5.65,  0.50, SUN_R*0.22, SUN_R*0.68],
-        // Bursts (wider, shorter)
-        [0.30, -0.65, SUN_R*0.50, SUN_R*0.60],
-        [1.10,  0.70, SUN_R*0.55, SUN_R*0.65],
-        [2.00, -0.55, SUN_R*0.45, SUN_R*0.58],
-        [2.80,  0.75, SUN_R*0.60, SUN_R*0.62],
-        [3.60, -0.60, SUN_R*0.50, SUN_R*0.60],
-        [4.50,  0.65, SUN_R*0.55, SUN_R*0.63],
-        [5.20, -0.70, SUN_R*0.45, SUN_R*0.58],
-        // Loops (medium width and height)
-        [0.60,  0.82, SUN_R*0.40, SUN_R*0.72],
-        [1.50, -0.78, SUN_R*0.38, SUN_R*0.70],
-        [2.40,  0.80, SUN_R*0.42, SUN_R*0.75],
-        [3.30, -0.72, SUN_R*0.36, SUN_R*0.68],
-        [4.20,  0.76, SUN_R*0.40, SUN_R*0.73]
-    ];
-    for (var fi = 0; fi < fDefs.length; fi++) {
-        mFlareGroup.add(createSunFlare(flareTex, flareEmis, SUN_R,
-            fDefs[fi][0], fDefs[fi][1], fDefs[fi][2], fDefs[fi][3]));
-    }
-    mSunGroup.add(mFlareGroup);
-    mSolarSystem.add(mSunGroup);
     // revolution pivot
     var revolutionPivot = new THREE.Object3D();
     // mercury
@@ -441,8 +569,9 @@ function initObjects() {
 }
 
 function render() {
-    var clock = new THREE.Clock();
-    var delta = clock.getDelta();
+    // Clock 必须全局唯一：每帧 getElapsedTime() 才连续，太阳 Shader 的 time 才能平滑动画
+    if (!mClock) mClock = new THREE.Clock();
+    var delta = mClock.getDelta();
     mTrackballControls.update(delta);
 
     mRenderer.clear();
@@ -459,6 +588,23 @@ function render() {
 }
 
 function updateScene() {
+    var t = mClock ? mClock.getElapsedTime() : 0.0;
+    if (mSunSurfaceMaterial && mSunSurfaceMaterial.uniforms && mSunSurfaceMaterial.uniforms.time) {
+        mSunSurfaceMaterial.uniforms.time.value = t;
+    }
+    // 日冕为 Group，内/外两层各自一份 ShaderMaterial，需统一刷新 time
+    if (mSunCorona) {
+        mSunCorona.traverse(function (obj) {
+            if (obj.material && obj.material.uniforms && obj.material.uniforms.time) {
+                obj.material.uniforms.time.value = t;
+            }
+        });
+    }
+    if (mSunLight) {
+        // subtle pulsation
+        var s = 38 * (0.95 + 0.06 * Math.sin(t * 1.7));
+        mSunLight.scale.set(s, s, s);
+    }
     for (var i = 0; i < mPlanets.length; i++) {
         mPlanets[i].group.rotation.y -= mPlanets[i].speed;  // 公转
         // 自转
@@ -466,11 +612,6 @@ function updateScene() {
         mPlanets[i].planet.rotation.y -= mPlanets[i].rotation.y;
     }
     mSun.rotation.y -= 0.004;   // 太阳自转速度
-    for (var ci = 0; ci < mSunClouds.length; ci++) {
-        mSunClouds[ci].rotateOnAxis(mSunClouds[ci].userData.axis, mSunClouds[ci].userData.speed);
-    }
-    mFlareGroup.rotation.y += 0.0015;
-    mFlareGroup.rotation.x += 0.0003;
 }
 
 function main() {
